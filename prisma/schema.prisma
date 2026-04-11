@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                         Int      @id @default(autoincrement())
+  name                       String
+  username                   String?  @unique
+  email                      String   @unique
+  walletAddress              String?  @unique
+  passwordHash               String?
+  role                       String
+  tokens                     Int      @default(0)
+  emailVerified              Boolean  @default(false)
+  verificationToken          String?  @unique
+  verificationTokenExpiresAt DateTime?
+}
+
+model OnrampPayment {
+  id            Int      @id @default(autoincrement())
+  orderId       String   @unique
+  walletAddress String
+  amount        Int
+  tokens        Int
+  status        String   @default("PENDING")
+  checksum      String
+  txHash        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

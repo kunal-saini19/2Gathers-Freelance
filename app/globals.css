@@ -1,0 +1,181 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg: #ffffff;
+    --color-bg-subtle: #f8fafc;
+    --color-border: #e2e8f0;
+    --color-text: #0f172a;
+    --color-text-muted: #64748b;
+    --color-accent: #2563eb;
+    --ink-900: #0f172a;
+    --outline: rgba(15, 23, 42, 0.08);
+    --surface: rgba(255, 255, 255, 0.88);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    min-height: 100vh;
+    font-family: "Manrope", sans-serif;
+    color: var(--color-text);
+    background:
+      radial-gradient(circle at 12% 12%, rgba(20, 184, 166, 0.16), transparent 34%),
+      radial-gradient(circle at 88% 18%, rgba(245, 158, 11, 0.18), transparent 32%),
+      linear-gradient(160deg, #f8fcfb 0%, #eef6fb 55%, #fefbf5 100%);
+    font-feature-settings: "kern" 1, "liga" 1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Sora", sans-serif;
+    letter-spacing: -0.02em;
+  }
+
+  *:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #f1f5f9;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary-600 text-white shadow-sm hover:bg-primary-700 active:bg-primary-800;
+  }
+
+  .btn-secondary {
+    @apply btn border border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50;
+  }
+
+  .btn-ghost {
+    @apply btn text-slate-600 hover:bg-slate-100 hover:text-slate-900;
+  }
+
+  .btn-sm {
+    @apply px-3 py-1.5 text-sm;
+  }
+
+  .btn-md {
+    @apply px-4 py-2.5 text-sm;
+  }
+
+  .btn-lg {
+    @apply px-6 py-3 text-base;
+  }
+
+  .btn-xl {
+    @apply px-8 py-3.5 text-base;
+  }
+
+  .card {
+    @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+  }
+
+  .card-hover {
+    @apply card transition-all duration-200 hover:border-slate-300 hover:shadow-md;
+  }
+
+  .card-surface {
+    background: var(--surface);
+    border: 1px solid var(--outline);
+    border-radius: 1.25rem;
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.07);
+    backdrop-filter: blur(6px);
+  }
+
+  .input {
+    @apply w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-500;
+  }
+
+  .label {
+    @apply mb-1.5 block text-sm font-semibold text-slate-700;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  }
+
+  .badge-blue {
+    @apply badge border border-blue-100 bg-blue-50 text-blue-700;
+  }
+
+  .badge-green {
+    @apply badge border border-green-100 bg-green-50 text-green-700;
+  }
+
+  .badge-slate {
+    @apply badge bg-slate-100 text-slate-600;
+  }
+
+  .badge-amber {
+    @apply badge border border-amber-100 bg-amber-50 text-amber-700;
+  }
+
+  .badge-red {
+    @apply badge border border-red-100 bg-red-50 text-red-700;
+  }
+
+  .section-label {
+    @apply mb-3 text-xs font-bold uppercase tracking-widest text-primary-600;
+  }
+
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold;
+  }
+
+  .interactive-press {
+    transition: transform 0.18s ease;
+  }
+
+  .interactive-press:active {
+    transform: translateY(1px) scale(0.99);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .dot-grid {
+    background-image: radial-gradient(circle, rgba(148, 163, 184, 0.2) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+}
