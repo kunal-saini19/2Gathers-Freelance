@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { generateChatReply } from "@/lib/ai";
 import type { MockJob } from "@/lib/db";
 
 type Message = {
@@ -15,22 +14,23 @@ export function ChatbotWidget({ suggestions }: { suggestions: MockJob[] }) {
     {
       id: "welcome",
       role: "assistant",
-      content: "Hi, I’m 2Gathers AI. Ask me about jobs, tokens, wallet flow, or support.",
+      content: "Hi, I'm 2Gathers AI Search Assistant powered by Groq. Ask me anything about jobs, wallet, tokens, dashboard flow, or support.",
     },
   ]);
   const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const quickReplies = useMemo(
     () => [
-      "Show jobs that fit my profile",
-      "How do tokens work?",
-      "How do I contact support?",
+      "Find jobs matching my skills",
+      "How do tokens and wallet actions work?",
+      "I am a client: how do I post and manage a job?",
     ],
     [],
   );
 
-  function sendMessage(text: string) {
-    if (!text.trim()) return;
+  async function sendMessage(text: string) {
+    if (!text.trim() || isLoading) return;
 
     const userMessage: Message = {
       id: `u-${Date.now()}`,
@@ -38,14 +38,42 @@ export function ChatbotWidget({ suggestions }: { suggestions: MockJob[] }) {
       content: text.trim(),
     };
 
-    const assistantMessage: Message = {
-      id: `a-${Date.now()}`,
-      role: "assistant",
-      content: generateChatReply(text),
-    };
-
-    setMessages((current) => [...current, userMessage, assistantMessage]);
+    setMessages((current) => [...current, userMessage]);
     setInput("");
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [...messages, userMessage],
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to get response from AI");
+      }
+
+      const data = await response.json();
+      const assistantMessage: Message = {
+        id: data.id,
+        role: "assistant",
+        content: data.message,
+      };
+
+      setMessages((current) => [...current, assistantMessage]);
+    } catch (error) {
+      console.error("Chat error:", error);
+      const errorMessage: Message = {
+        id: `error-${Date.now()}`,
+        role: "assistant",
+        content: "Sorry, I encountered an error. Please try again.",
+      };
+      setMessages((current) => [...current, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -66,15 +94,23 @@ export function ChatbotWidget({ suggestions }: { suggestions: MockJob[] }) {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage(input);
+              }
+            }}
+            disabled={isLoading}
             placeholder="Ask the assistant something..."
-            className="flex-1 bg-transparent px-1 text-sm outline-none placeholder:text-slate-400"
+            className="flex-1 bg-transparent px-1 text-sm outline-none placeholder:text-slate-400 disabled:opacity-50"
           />
           <button
             type="button"
             onClick={() => sendMessage(input)}
-            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
+            disabled={!input.trim() || isLoading}
+            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Send
+            {isLoading ? "..." : "Send"}
           </button>
         </div>
       </div>
@@ -87,7 +123,8 @@ export function ChatbotWidget({ suggestions }: { suggestions: MockJob[] }) {
               key={reply}
               type="button"
               onClick={() => sendMessage(reply)}
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+              disabled={isLoading}
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {reply}
             </button>

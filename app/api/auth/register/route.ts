@@ -9,7 +9,13 @@ export const runtime = "nodejs";
 const registerSchema = z.object({
   username: z.string().trim().min(3),
   email: z.string().trim().email(),
-  password: z.string().min(8),
+  password: z
+    .string()
+    .min(8)
+    .regex(/[A-Z]/)
+    .regex(/[a-z]/)
+    .regex(/[0-9]/)
+    .regex(/[^A-Za-z0-9]/),
   role: z.enum(["CLIENT", "FREELANCER"]),
 });
 

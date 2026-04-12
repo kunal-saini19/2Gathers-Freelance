@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { ArrowRight, Lock, Mail, UserRoundPlus } from "lucide-react";
+import { ArrowRight, Check, Circle, Lock, Mail, UserRoundPlus } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -15,7 +15,13 @@ import { authApi } from "@/lib/api";
 const registerSchema = z.object({
   username: z.string().min(3),
   email: z.string().email(),
-  password: z.string().min(8),
+  password: z
+    .string()
+    .min(8, "At least 8 characters")
+    .regex(/[A-Z]/, "At least 1 uppercase letter")
+    .regex(/[a-z]/, "At least 1 lowercase letter")
+    .regex(/[0-9]/, "At least 1 number")
+    .regex(/[^A-Za-z0-9]/, "At least 1 special character"),
   role: z.enum(["CLIENT", "FREELANCER"]),
 });
 
@@ -84,13 +90,23 @@ export function AuthPanel({ initialMode }: AuthPanelProps) {
         throw new Error("Unexpected auth response.");
       }
       login({ user: payload.user, token: payload.accessToken });
-      router.push("/dashboard");
+      router.push("/start");
     },
   });
 
   const activeMutation = mode === "register" ? registerMutation : loginMutation;
   const error = (activeMutation.error as any)?.response?.data?.detail || activeMutation.error?.message;
   const loading = activeMutation.isPending;
+  const passwordValue = registerForm.watch("password") || "";
+  const passwordRules = [
+    { label: "At least 8 characters", ok: passwordValue.length >= 8 },
+    { label: "At least 1 uppercase letter", ok: /[A-Z]/.test(passwordValue) },
+    { label: "At least 1 lowercase letter", ok: /[a-z]/.test(passwordValue) },
+    { label: "At least 1 number", ok: /[0-9]/.test(passwordValue) },
+    { label: "At least 1 special character", ok: /[^A-Za-z0-9]/.test(passwordValue) },
+  ];
+
+
 
   return (
     <div className="grid min-h-screen lg:grid-cols-[1.05fr_0.95fr]">
@@ -189,7 +205,15 @@ export function AuthPanel({ initialMode }: AuthPanelProps) {
                   <span className="label">Password</span>
                   <div className="relative">
                     <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <input className="input pl-10" type="password" placeholder="Minimum 8 characters" {...registerForm.register("password")} minLength={8} required />
+                    <input className="input pl-10" type="password" placeholder="Create a strong password" {...registerForm.register("password")} minLength={8} required />
+                  </div>
+                  <div className="mt-2 space-y-1.5">
+                    {passwordRules.map((rule) => (
+                      <div key={rule.label} className={`flex items-center gap-2 text-xs ${rule.ok ? "text-emerald-700" : "text-slate-500"}`}>
+                        {rule.ok ? <Check className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
+                        <span>{rule.label}</span>
+                      </div>
+                    ))}
                   </div>
                 </label>
 
@@ -226,7 +250,7 @@ export function AuthPanel({ initialMode }: AuthPanelProps) {
               </form>
             )}
 
-            <p className="mt-4 text-xs text-slate-500">
+            <p className="mt-6 text-xs text-slate-500">
               {mode === "register" ? (
                 <>
                   Already have an account? <Link href="/login" className="font-semibold text-primary-600">Sign in</Link>

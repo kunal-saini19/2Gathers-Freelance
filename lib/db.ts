@@ -179,19 +179,19 @@ export const mockTeam: MockTeamMember[] = [
 export const mockFaqs: MockFaq[] = [
   {
     question: "How do tokens work?",
-    answer: "Tokens are the platform currency used for premium applications, boosts, and wallet rewards.",
+    answer: "Tokens are the platform currency used for premium applications, boosts, and wallet rewards. Freelancers earn tokens by completing jobs and clients buy tokens to post premium jobs.",
   },
   {
     question: "Can I use this without crypto?",
-    answer: "Yes. The prototype simulates blockchain behavior now and can evolve into real web3 later.",
+    answer: "Yes. The prototype simulates blockchain behavior now and can evolve into real web3 later. You can link a wallet address on the Wallet page to practice transfers.",
   },
   {
     question: "How does AI job matching work?",
-    answer: "Job recommendations are scored from skills, role fit, and token activity using mock AI logic.",
+    answer: "Job recommendations are scored from your skills, role fit, availability, and token activity. The AI Search Assistant helps you find jobs relevant to your profile.",
   },
   {
     question: "Is the database real?",
-    answer: "Yes. A Prisma SQLite database is added in the background while the current UI remains unchanged.",
+    answer: "Yes. A Prisma SQLite database is added in the background. Your account data, job history, and wallet activity are persisted in the local database.",
   },
 ];
 
@@ -208,4 +208,186 @@ export function getMockWallet(userId: string) {
     tokenName: "2GTH",
     network: "Simulated Ledger",
   };
+}
+
+// Task System
+export type SupportedLanguage = "javascript" | "typescript" | "python" | "java";
+
+export type MockTask = {
+  id: string;
+  title: string;
+  description: string;
+  difficulty: "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXPERT";
+  category: string;
+  rewardTokens: number;
+  timeLimit?: number;
+  functionName: string;
+  language: SupportedLanguage;
+  supportedLanguages: SupportedLanguage[];
+  starterCodeByLanguage: Record<SupportedLanguage, string>;
+};
+
+export type MockTestCase = {
+  args: unknown[];
+  expected: unknown;
+  description: string;
+  hidden?: boolean;
+};
+
+export const mockTasks: MockTask[] = [
+  {
+    id: "t1",
+    title: "Sum of Two Numbers",
+    description: "Write a function that takes two numbers and returns their sum.",
+    difficulty: "BEGINNER",
+    category: "Basic Math",
+    rewardTokens: 10,
+    timeLimit: 15,
+    functionName: "sum",
+    language: "javascript",
+    supportedLanguages: ["javascript", "typescript", "python"],
+    starterCodeByLanguage: {
+      javascript: `function sum(a, b) {
+  // Write your code here
+  return a + b;
+}`,
+      typescript: `function sum(a: number, b: number): number {
+  // Write your code here
+  return a + b;
+}`,
+      python: `def sum(a, b):
+    # Write your code here
+    return a + b`,
+      java: `class Solution {
+    public int sum(int a, int b) {
+        // Write your code here
+        return a + b;
+    }
+}`,
+    },
+  },
+  {
+    id: "t2",
+    title: "Even or Odd",
+    description: "Write a function that checks if a number is even or odd.",
+    difficulty: "BEGINNER",
+    category: "Logic",
+    rewardTokens: 10,
+    timeLimit: 15,
+    functionName: "isEven",
+    language: "javascript",
+    supportedLanguages: ["javascript", "typescript", "python"],
+    starterCodeByLanguage: {
+      javascript: `function isEven(num) {
+  // Write your code here
+  return num % 2 === 0;
+}`,
+      typescript: `function isEven(num: number): boolean {
+  // Write your code here
+  return num % 2 === 0;
+}`,
+      python: `def isEven(num):
+    # Write your code here
+    return num % 2 == 0`,
+      java: `class Solution {
+    public boolean isEven(int num) {
+        // Write your code here
+        return num % 2 == 0;
+    }
+}`,
+    },
+  },
+  {
+    id: "t3",
+    title: "Reverse a String",
+    description: "Write a function that reverses a given string.",
+    difficulty: "BEGINNER",
+    category: "String Manipulation",
+    rewardTokens: 15,
+    timeLimit: 20,
+    functionName: "reverseString",
+    language: "javascript",
+    supportedLanguages: ["javascript", "typescript", "python"],
+    starterCodeByLanguage: {
+      javascript: `function reverseString(str) {
+  // Write your code here
+  return str.split("").reverse().join("");
+}`,
+      typescript: `function reverseString(str: string): string {
+  // Write your code here
+  return str.split("").reverse().join("");
+}`,
+      python: `def reverseString(str):
+    # Write your code here
+    return str[::-1]`,
+      java: `class Solution {
+    public String reverseString(String str) {
+        // Write your code here
+        return new StringBuilder(str).reverse().toString();
+    }
+}`,
+    },
+  },
+  {
+    id: "t4",
+    title: "Find Maximum in Array",
+    description: "Write a function that finds the maximum value in an array.",
+    difficulty: "INTERMEDIATE",
+    category: "Array Operations",
+    rewardTokens: 25,
+    timeLimit: 25,
+    functionName: "findMax",
+    language: "javascript",
+    supportedLanguages: ["javascript", "typescript", "python"],
+    starterCodeByLanguage: {
+      javascript: `function findMax(arr) {
+  // Write your code here
+  return Math.max(...arr);
+}`,
+      typescript: `function findMax(arr: number[]): number {
+  // Write your code here
+  return Math.max(...arr);
+}`,
+      python: `def findMax(arr):
+    # Write your code here
+    return max(arr)`,
+      java: `class Solution {
+    public int findMax(int[] arr) {
+        // Write your code here
+        int max = arr[0];
+        for (int value : arr) {
+            if (value > max) max = value;
+        }
+        return max;
+    }
+}`,
+    },
+  },
+];
+
+export const mockTestCases: Record<string, MockTestCase[]> = {
+  t1: [
+    { args: [5, 3], expected: 8, description: "Sum of 5 and 3" },
+    { args: [10, 20], expected: 30, description: "Sum of 10 and 20" },
+    { args: [-5, 5], expected: 0, description: "Sum of -5 and 5", hidden: true },
+  ],
+  t2: [
+    { args: [4], expected: true, description: "4 is even" },
+    { args: [7], expected: false, description: "7 is odd" },
+    { args: [0], expected: true, description: "0 is even", hidden: true },
+  ],
+  t3: [
+    { args: ["hello"], expected: "olleh", description: "Reverse hello" },
+    { args: ["world"], expected: "dlrow", description: "Reverse world" },
+    { args: ["a"], expected: "a", description: "Reverse single char", hidden: true },
+  ],
+  t4: [
+    { args: [[3, 7, 2, 9, 1]], expected: 9, description: "Max of array" },
+    { args: [[10, 20, 15]], expected: 20, description: "Max of 10,20,15" },
+    { args: [[-5, -2, -10]], expected: -2, description: "Max of negatives", hidden: true },
+  ],
+};
+
+export function getStarterCode(task: MockTask, language: SupportedLanguage) {
+  return task.starterCodeByLanguage[language] ?? task.starterCodeByLanguage[task.language];
 }

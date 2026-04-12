@@ -25,6 +25,16 @@ export async function POST(request: Request) {
       walletAddress: true,
       passwordHash: true,
       emailVerified: true,
+      freelancerProfile: {
+        select: {
+          id: true,
+        },
+      },
+      clientProfile: {
+        select: {
+          id: true,
+        },
+      },
     },
   });
 
@@ -49,6 +59,8 @@ export async function POST(request: Request) {
       email: user.email,
       role: user.role,
       walletAddress: user.walletAddress,
+      hasFreelancerProfile: !!user.freelancerProfile,
+      hasClientProfile: !!user.clientProfile,
     },
   });
 }

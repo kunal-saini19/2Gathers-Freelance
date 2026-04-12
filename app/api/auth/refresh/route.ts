@@ -21,7 +21,23 @@ export async function POST(request: Request) {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, username: true, email: true, role: true, emailVerified: true },
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      role: true,
+      emailVerified: true,
+      freelancerProfile: {
+        select: {
+          id: true,
+        },
+      },
+      clientProfile: {
+        select: {
+          id: true,
+        },
+      },
+    },
   });
 
   if (!user || !user.emailVerified || !user.username) {
@@ -35,6 +51,8 @@ export async function POST(request: Request) {
       username: user.username,
       email: user.email,
       role: user.role,
+      hasFreelancerProfile: !!user.freelancerProfile,
+      hasClientProfile: !!user.clientProfile,
     },
   });
 }

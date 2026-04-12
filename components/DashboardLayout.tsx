@@ -4,10 +4,12 @@ import { Footer } from "@/components/Footer";
 export function DashboardLayout({
   title,
   subtitle,
+  sidebar,
   children,
 }: {
   title: string;
   subtitle?: string;
+  sidebar?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -19,7 +21,14 @@ export function DashboardLayout({
           <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">{title}</h1>
           {subtitle ? <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600 md:text-base">{subtitle}</p> : null}
         </section>
-        {children}
+        {sidebar ? (
+          <div className="grid gap-6 lg:grid-cols-[240px_1fr] lg:items-start">
+            <aside className="card-surface p-4 lg:sticky lg:top-28">{sidebar}</aside>
+            <div>{children}</div>
+          </div>
+        ) : (
+          children
+        )}
       </main>
       <Footer />
     </div>

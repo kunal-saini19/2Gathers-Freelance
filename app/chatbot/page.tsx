@@ -12,8 +12,8 @@ export default function ChatbotPage() {
 
   return (
     <DashboardLayout
-      title="AI Chatbot"
-      subtitle="A calm, frontend-only chatbot simulation that helps users discover jobs, understand tokens, and navigate support."
+      title="AI Search Assistant"
+      subtitle="Ask platform-specific questions and get smart answers about jobs, tokens, wallet actions, dashboard flow, and support."
     >
       <ChatbotWidget suggestions={recommendations} />
     </DashboardLayout>

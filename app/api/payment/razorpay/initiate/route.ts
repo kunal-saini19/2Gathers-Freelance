@@ -5,6 +5,20 @@ import { prisma } from "@/lib/prisma";
 const DEFAULT_TOKENS_PER_INR = Number(process.env.RAZORPAY_TOKENS_PER_INR || "10");
 const RAZORPAY_BASE_URL = process.env.RAZORPAY_BASE_URL || "https://api.razorpay.com";
 
+function mapRazorpayErrorStatus(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+
+  if (message.toLowerCase().includes("not configured")) {
+    return 503;
+  }
+
+  if (message.toLowerCase().includes("razorpay")) {
+    return 502;
+  }
+
+  return 500;
+}
+
 function getRazorpayAuthHeader() {
   const keyId = process.env.RAZORPAY_KEY_ID || "";
   const keySecret = process.env.RAZORPAY_KEY_SECRET || "";
@@ -114,9 +128,10 @@ export async function POST(request: NextRequest) {
       gateway: "razorpay",
     });
   } catch (error) {
+    const status = mapRazorpayErrorStatus(error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unable to initiate Razorpay payment" },
-      { status: 500 },
+      { status },
     );
   }
 }

@@ -2,6 +2,8 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import HomePage from "./page";
+import { AuthProvider } from "@/context/AuthContext";
+import { QueryProvider } from "@/components/QueryProvider";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
@@ -13,8 +15,14 @@ vi.mock("next/navigation", () => ({
 
 describe("HomePage", () => {
   it("shows the landing page hero", () => {
-    render(<HomePage />);
+    render(
+      <QueryProvider>
+        <AuthProvider>
+          <HomePage />
+        </AuthProvider>
+      </QueryProvider>
+    );
 
-    expect(screen.getByRole("heading", { name: /hire and get hired/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /hire better/i })).toBeInTheDocument();
   });
 });

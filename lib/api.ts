@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:4000/api",
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "/api",
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -109,17 +109,97 @@ export const authApi = {
 };
 
 export const jobsApi = {
-  list: (params: { search?: string; difficulty?: string }) => api.get("/jobs", { params }),
-  apply: (jobId: string, message: string) => api.post("/applications", { jobId, message }),
+  list: () => localApi.get("/api/jobs"),
+  byId: (id: string | number) => localApi.get(`/api/jobs/${id}`),
+  complete: (id: string | number) => localApi.patch(`/api/jobs/${id}/complete`, {}),
   create: (payload: {
     title: string;
     description: string;
-    difficultyLevel: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
-    skillsRequired: string;
     budget: number;
-    isPremium: boolean;
-    premiumApplyCost: number;
-  }) => api.post("/jobs", payload),
+  }) => localApi.post("/api/jobs", payload),
+};
+
+export const proposalsApi = {
+  create: (payload: { jobId: number; coverLetter: string }) => localApi.post("/api/proposals", payload),
+  listByJob: (jobId: number) => localApi.get(`/api/proposals?jobId=${jobId}`),
+  inbox: () => localApi.get("/api/proposals/inbox"),
+  updateStatus: (proposalId: number, status: "SHORTLISTED" | "ACCEPTED" | "REJECTED") =>
+    localApi.patch(`/api/proposals/${proposalId}/status`, { status }),
+};
+
+export const messagesApi = {
+  listByProposal: (proposalId: number) => localApi.get(`/api/messages?proposalId=${proposalId}`),
+  create: (payload: { proposalId: number; body: string }) => localApi.post("/api/messages", payload),
+};
+
+export const notificationsApi = {
+  list: (limit = 30) => localApi.get(`/api/notifications?limit=${limit}`),
+  markRead: (notificationId: number) => localApi.patch("/api/notifications", { notificationId }),
+  markAllRead: () => localApi.patch("/api/notifications", { markAllRead: true }),
+};
+
+export const reviewsApi = {
+  listByJob: (jobId: number) => localApi.get(`/api/reviews?jobId=${jobId}`),
+  listByTargetUser: (targetUserId: number) => localApi.get(`/api/reviews?targetUserId=${targetUserId}`),
+  create: (payload: { jobId: number; rating: number; comment: string }) => localApi.post("/api/reviews", payload),
+};
+
+export const savedJobsApi = {
+  list: () => localApi.get("/api/saved/jobs"),
+  toggle: (jobId: number) => localApi.post("/api/saved/jobs", { jobId }),
+};
+
+export const savedFreelancersApi = {
+  list: () => localApi.get("/api/saved/freelancers"),
+  toggle: (freelancerId: number) => localApi.post("/api/saved/freelancers", { freelancerId }),
+};
+
+export const adminApi = {
+  overview: () => localApi.get("/api/admin/overview"),
+};
+
+export const freelancerProfileApi = {
+  me: () => localApi.get("/api/freelancer-profile"),
+  save: (payload: {
+    professionalTitle: string;
+    bio: string;
+    skills: string;
+    experienceLevel: "ENTRY" | "INTERMEDIATE" | "EXPERT";
+    hourlyRateUsd: number;
+    country: string;
+    city: string;
+    phone?: string;
+    languages: string;
+    portfolioUrl?: string;
+    githubUrl?: string;
+    linkedinUrl?: string;
+    education?: string;
+    certifications?: string;
+    availability: "FULL_TIME" | "PART_TIME" | "AS_NEEDED";
+    preferredWorkingHours?: string;
+    responseTime: "WITHIN_HOUR" | "WITHIN_DAY" | "WITHIN_2_DAYS";
+  }) => localApi.post("/api/freelancer-profile", payload),
+};
+
+export const clientProfileApi = {
+  me: () => localApi.get("/api/client-profile"),
+  save: (payload: {
+    accountType: "INDIVIDUAL" | "COMPANY";
+    displayName: string;
+    companyName?: string;
+    about: string;
+    companySize: "SOLO" | "SMALL" | "MID" | "LARGE" | "ENTERPRISE";
+    websiteUrl?: string;
+    country: string;
+    timezone: string;
+    phone?: string;
+    linkedinUrl?: string;
+    preferredLanguages: string;
+    budgetRange: "UNDER_1K" | "ONE_TO_FIVE_K" | "FIVE_TO_TEN_K" | "TEN_PLUS";
+    hiringGoals: string;
+    communicationPreference: "CHAT_EMAIL" | "VIDEO_CALLS" | "FLEXIBLE";
+    responseExpectation: "WITHIN_24H" | "WITHIN_3_DAYS" | "FLEXIBLE";
+  }) => localApi.post("/api/client-profile", payload),
 };
 
 export default api;

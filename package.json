@@ -5,8 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run prisma:generate && next build",
     "start": "next start",
+    "postinstall": "npm run prisma:generate",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy",
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -15,7 +18,9 @@
     "hardhat:deploy": "hardhat run scripts/deploy.ts --network sepolia"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.88.0",
     "@hookform/resolvers": "^3.10.0",
+    "@monaco-editor/react": "^4.7.0",
     "@prisma/client": "^6.19.0",
     "@tanstack/react-query": "^5.66.8",
     "axios": "^1.8.4",
@@ -24,10 +29,12 @@
     "lucide-react": "^0.474.0",
     "next": "^15.2.4",
     "nodemailer": "^8.0.5",
+    "openai": "^6.34.0",
     "prisma": "^6.19.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-hook-form": "^7.54.2",
+    "recharts": "^3.8.1",
     "zod": "^3.24.2"
   },
   "devDependencies": {

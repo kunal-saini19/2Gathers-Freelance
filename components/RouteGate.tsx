@@ -16,15 +16,39 @@ export function RouteGate({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (loading) return;
-    const isPublic = pathname === "/";
+    const isPublic = pathname === "/" || pathname === "/login" || pathname === "/register";
+    const isSelectionPage = pathname === "/start";
+    const isFreelancerOnboarding = pathname === "/onboarding/freelancer";
+    const isClientOnboarding = pathname === "/onboarding/client";
+    const isEditMode = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("edit") === "1";
 
     if (!user && !isPublic) {
       router.replace("/");
       return;
     }
 
-    if (user && isPublic) {
+    if (user?.role === "FREELANCER" && !user?.hasFreelancerProfile && !isFreelancerOnboarding && !isSelectionPage) {
+      router.replace("/onboarding/freelancer");
+      return;
+    }
+
+    if (user?.role === "FREELANCER" && user?.hasFreelancerProfile && isFreelancerOnboarding && !isEditMode) {
       router.replace("/dashboard");
+      return;
+    }
+
+    if (user?.role === "CLIENT" && !user?.hasClientProfile && !isClientOnboarding && !isSelectionPage) {
+      router.replace("/onboarding/client");
+      return;
+    }
+
+    if (user?.role === "CLIENT" && user?.hasClientProfile && isClientOnboarding && !isEditMode) {
+      router.replace("/dashboard");
+      return;
+    }
+
+    if (user && isPublic) {
+      router.replace("/start");
     }
   }, [loading, pathname, router, user]);
 

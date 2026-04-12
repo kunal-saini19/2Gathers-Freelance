@@ -12,6 +12,8 @@ export interface AuthUser {
   email?: string;
   role: UserRole;
   walletAddress?: string | null;
+  hasFreelancerProfile?: boolean;
+  hasClientProfile?: boolean;
 }
 
 type AuthContextValue = {
@@ -34,7 +36,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const rawToken = window.localStorage.getItem("twogathers_access");
 
     async function bootstrap() {
-      if (rawUser) setUser(JSON.parse(rawUser));
+      if (rawUser && rawToken) {
+        setUser(JSON.parse(rawUser));
+      }
       if (rawToken) {
         setAccessToken(rawToken);
         setApiToken(rawToken);
@@ -54,8 +58,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
       } catch {
+        setUser(null);
+        setAccessToken(null);
+        setApiToken(null);
+        window.localStorage.removeItem("twogathers_user");
         window.localStorage.removeItem("twogathers_access");
       } finally {
+        if (!rawToken) {
+          setUser(null);
+          setAccessToken(null);
+          setApiToken(null);
+          window.localStorage.removeItem("twogathers_user");
+          window.localStorage.removeItem("twogathers_access");
+        }
         setLoading(false);
       }
     }

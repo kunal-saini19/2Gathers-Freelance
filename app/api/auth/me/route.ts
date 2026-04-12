@@ -21,7 +21,23 @@ export async function GET(request: Request) {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, username: true, email: true, role: true, walletAddress: true },
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      role: true,
+      walletAddress: true,
+      freelancerProfile: {
+        select: {
+          id: true,
+        },
+      },
+      clientProfile: {
+        select: {
+          id: true,
+        },
+      },
+    },
   });
 
   if (!user || !user.username) {
@@ -35,6 +51,8 @@ export async function GET(request: Request) {
       email: user.email,
       role: user.role,
       walletAddress: user.walletAddress,
+      hasFreelancerProfile: !!user.freelancerProfile,
+      hasClientProfile: !!user.clientProfile,
     },
   });
 }

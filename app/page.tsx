@@ -1,41 +1,59 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
-import { ArrowRight, CheckCircle2, ChevronRight, Globe, Lock, Shield, Sparkles, Star, Zap } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowRight, BriefcaseBusiness, Building2, CheckCircle2, ChevronRight, Globe, Lock, Shield, Sparkles, Star, Zap } from "lucide-react";
 import { motion, useInView } from "framer-motion";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import { useAuth } from "@/context/AuthContext";
 import { mockJobs } from "@/lib/db";
 
 const features = [
   {
     icon: Sparkles,
-    title: "AI Job Matching",
-    description: "Relevant opportunities are surfaced with a strong, focused layout that makes browsing feel quick and intentional.",
+    title: "AI-Driven Match Quality",
+    description: "Shortlist faster with high-signal recommendations based on role fit, skills, and hiring intent.",
   },
   {
     icon: Shield,
-    title: "Trusted Workflow",
-    description: "Profile, application, and payment flows are presented with calm structure so the product feels credible from the first click.",
+    title: "Reliable Hiring Workflow",
+    description: "From discovery to payout, every step is structured to reduce friction and improve confidence.",
   },
   {
     icon: Zap,
-    title: "Token Economy",
-    description: "The wallet, rewards, and premium actions are framed as part of one system instead of isolated screens.",
+    title: "Token-Powered Actions",
+    description: "Use a unified token system for premium applications, boosts, and wallet-based activity.",
+  },
+];
+
+const roleTracks = [
+  {
+    icon: BriefcaseBusiness,
+    title: "For Freelancers",
+    points: ["Create a focused profile", "Get matched with relevant work", "Track earnings and wallet activity"],
+    ctaLabel: "Start as Freelancer",
+    href: "/register?role=FREELANCER",
+  },
+  {
+    icon: Building2,
+    title: "For Clients",
+    points: ["Post clear project briefs", "Receive better-fit proposals", "Manage hiring from one dashboard"],
+    ctaLabel: "Start as Client",
+    href: "/register?role=CLIENT",
   },
 ];
 
 const steps = [
-  { n: "01", title: "Create Your Profile", body: "Set up your role, skills, and preferences in a few focused steps." },
-  { n: "02", title: "Discover Work", body: "Browse projects, compare fit, and move through the funnel with less friction." },
-  { n: "03", title: "Track Value", body: "Review token movement, wallet balance, and platform activity in one place." },
+  { n: "01", title: "Set Up in Minutes", body: "Choose your role and launch with a profile that communicates your value clearly." },
+  { n: "02", title: "Move with Better Signal", body: "Match, review, and act on opportunities with less noise and faster decisions." },
+  { n: "03", title: "Scale with Visibility", body: "Monitor projects, payouts, and platform outcomes from one professional workspace." },
 ];
 
 const testimonials = [
-  { name: "Alex Chen", role: "Full-stack freelancer", quote: "The interface feels sharper than a typical marketplace. Everything is organized around action." },
-  { name: "Sarah Rodriguez", role: "Hiring manager", quote: "The structure makes it easy to scan for value fast. It looks polished without feeling heavy." },
-  { name: "Marcus Williams", role: "Startup founder", quote: "A strong balance of trust, clarity, and modern UI. It reads like a product a team can actually ship." },
+  { name: "Alex Chen", role: "Full-stack freelancer", quote: "Proposal flow is cleaner, and I can focus on opportunities that truly match my profile." },
+  { name: "Sarah Rodriguez", role: "Hiring manager", quote: "Our team moves faster because project posting and candidate review are in one structured flow." },
+  { name: "Marcus Williams", role: "Startup founder", quote: "2Gathers feels production-ready. The product language and UI both communicate trust." },
 ];
 
 function StatItem({ value, label }: { value: string; label: string }) {
@@ -47,9 +65,71 @@ function StatItem({ value, label }: { value: string; label: string }) {
   );
 }
 
+function getRoleHeroContent(role: "CLIENT" | "FREELANCER" | null) {
+  if (role === "CLIENT") {
+    return {
+      badge: "Client-first workspace for professional hiring",
+      headlineTop: "Hire with precision.",
+      headlineAccent: "Deliver with confidence.",
+      subtitle:
+        "Post clear projects, review better-fit proposals, and manage hiring decisions from one structured dashboard.",
+      primaryCtaHref: "/register?role=CLIENT",
+      primaryCtaLabel: "Get Started as Client",
+      secondaryCtaHref: "/client/post-job",
+      secondaryCtaLabel: "Post a Job",
+    };
+  }
+
+  if (role === "FREELANCER") {
+    return {
+      badge: "Freelancer-first workspace for focused growth",
+      headlineTop: "Win better projects.",
+      headlineAccent: "Grow with clarity.",
+      subtitle:
+        "Find role-fit opportunities faster, submit stronger proposals, and track your progress with less friction.",
+      primaryCtaHref: "/register?role=FREELANCER",
+      primaryCtaLabel: "Get Started as Freelancer",
+      secondaryCtaHref: "/freelancer/jobs",
+      secondaryCtaLabel: "Explore Matches",
+    };
+  }
+
+  return {
+    badge: "Professional freelance marketplace for modern teams",
+    headlineTop: "Hire better.",
+    headlineAccent: "Work smarter.",
+    subtitle:
+      "2Gathers helps freelancers and clients connect through a clearer workflow, stronger trust signals, and role-specific experiences.",
+    primaryCtaHref: "/register",
+    primaryCtaLabel: "Get Started",
+    secondaryCtaHref: "/jobs",
+    secondaryCtaLabel: "Browse Jobs",
+  };
+}
+
 export default function HomePage() {
   const statsRef = useRef<HTMLDivElement>(null);
   const inView = useInView(statsRef, { once: true });
+  const { user } = useAuth();
+  const [roleFromQuery, setRoleFromQuery] = useState<"CLIENT" | "FREELANCER" | null>(null);
+
+  useEffect(() => {
+    const role = new URLSearchParams(window.location.search).get("role");
+    if (role === "CLIENT" || role === "FREELANCER") {
+      setRoleFromQuery(role);
+      return;
+    }
+    setRoleFromQuery(null);
+  }, []);
+
+  const scopedRole =
+    user?.role === "CLIENT" || user?.role === "FREELANCER"
+      ? user.role
+      : roleFromQuery === "CLIENT" || roleFromQuery === "FREELANCER"
+        ? roleFromQuery
+        : null;
+
+  const hero = getRoleHeroContent(scopedRole);
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
@@ -63,39 +143,46 @@ export default function HomePage() {
           <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}>
             <div className="mx-auto mb-8 inline-flex items-center gap-2 rounded-full border border-slate-700 px-4 py-1.5 text-xs font-medium text-slate-400">
               <span className="h-1.5 w-1.5 rounded-full bg-primary-500" />
-              Built for freelance hiring with a cleaner product structure
+              {hero.badge}
             </div>
 
             <h1 className="max-w-4xl text-5xl font-bold leading-tight tracking-tight text-white md:text-6xl lg:text-7xl">
-              Hire and get hired
+              {hero.headlineTop}
               <br />
-              <span className="text-primary-400">with clarity, speed, and trust</span>
+              <span className="text-primary-400">{hero.headlineAccent}</span>
             </h1>
 
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-slate-400 md:text-xl">
-              A focused freelancing experience with cleaner structure, stronger hierarchy, and a more intentional visual system.
+              {hero.subtitle}
             </p>
 
             <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
-              <Link href="/register" className="btn-primary btn-xl shadow-none hover:shadow-none">
-                Get Started <ArrowRight className="h-4 w-4" />
+              <Link href={hero.primaryCtaHref} className="btn-primary btn-xl shadow-none hover:shadow-none">
+                {hero.primaryCtaLabel} <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link href="/jobs" className="btn-secondary btn-xl border-slate-700 bg-transparent text-slate-300 hover:border-slate-600 hover:bg-slate-800 hover:text-white">
-                Browse Jobs
+              <Link href={hero.secondaryCtaHref} className="btn-secondary btn-xl border-slate-700 bg-transparent text-slate-300 hover:border-slate-600 hover:bg-slate-800 hover:text-white">
+                {hero.secondaryCtaLabel}
               </Link>
             </div>
 
             <div className="mt-8 flex flex-wrap justify-center gap-6 text-sm text-slate-500">
               {[
-                { icon: Shield, label: "Secure workflows" },
-                { icon: Lock, label: "Simple auth flow" },
-                { icon: Globe, label: "Responsive structure" },
+                { icon: Shield, label: "Secure workflow" },
+                { icon: Lock, label: "Verified accounts" },
+                { icon: Globe, label: "Built for remote teams" },
               ].map(({ icon: Icon, label }) => (
                 <div key={label} className="flex items-center gap-1.5">
                   <Icon className="h-4 w-4 text-slate-600" />
                   {label}
                 </div>
               ))}
+            </div>
+
+            <div className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+              <span>Studio North</span>
+              <span>Orbit Works</span>
+              <span>Northstar HR</span>
+              <span>Inkwell Labs</span>
             </div>
           </motion.div>
 
@@ -119,7 +206,7 @@ export default function HomePage() {
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.45 }} className="mb-16 text-center">
             <p className="section-label">Platform capabilities</p>
             <h2 className="text-4xl font-bold tracking-tight text-slate-900">Everything feels closer together.</h2>
-            <p className="mx-auto mt-3 max-w-2xl text-lg text-slate-500">The UI now reads like one product system instead of a set of disconnected pages.</p>
+            <p className="mx-auto mt-3 max-w-2xl text-lg text-slate-500">A single product system for discovery, hiring, proposals, and wallet operations.</p>
           </motion.div>
 
           <div className="grid gap-6 md:grid-cols-3">
@@ -130,6 +217,37 @@ export default function HomePage() {
                 </div>
                 <h3 className="mb-2 text-lg font-semibold text-slate-900">{feature.title}</h3>
                 <p className="text-sm leading-6 text-slate-500">{feature.description}</p>
+              </motion.article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-slate-100 bg-white py-24">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.45 }} className="mb-12 text-center">
+            <p className="section-label">Role-based experience</p>
+            <h2 className="text-4xl font-bold tracking-tight text-slate-900">Two paths. One professional platform.</h2>
+          </motion.div>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            {roleTracks.map((track, index) => (
+              <motion.article key={track.title} initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.45, delay: index * 0.08 }} className="card-hover p-8">
+                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
+                  <track.icon className="h-6 w-6" />
+                </div>
+                <h3 className="mb-4 text-2xl font-semibold text-slate-900">{track.title}</h3>
+                <ul className="mb-6 space-y-2 text-sm text-slate-600">
+                  {track.points.map((point) => (
+                    <li key={point} className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link href={track.href} className="btn-primary btn-md">
+                  {track.ctaLabel} <ArrowRight className="h-4 w-4" />
+                </Link>
               </motion.article>
             ))}
           </div>
@@ -223,7 +341,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.45 }}>
             <h2 className="text-4xl font-bold tracking-tight text-slate-900">Ready to get started?</h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-500">Move into the cleaner auth flow and start using the rest of the product structure from there.</p>
+            <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-500">Join as freelancer or client and move from sign-up to action with a clear, professional workflow.</p>
             <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
               <Link href="/register" className="btn-primary btn-xl">
                 Create account <ArrowRight className="h-4 w-4" />

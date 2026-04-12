@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -19,6 +19,21 @@ model User {
   emailVerified              Boolean  @default(false)
   verificationToken          String?  @unique
   verificationTokenExpiresAt DateTime?
+  jobsPosted                 Job[]    @relation("ClientJobs")
+  proposals                  Proposal[] @relation("FreelancerProposals")
+  freelancerProfile          FreelancerProfile?
+  clientProfile              ClientProfile?
+  sentMessages               Message[] @relation("MessageSender")
+  receivedMessages           Message[] @relation("MessageReceiver")
+  notifications              Notification[]
+  authoredReviews            Review[] @relation("ReviewAuthor")
+  receivedReviews            Review[] @relation("ReviewTarget")
+  savedJobs                  SavedJob[]
+  savedFreelancers           SavedFreelancer[] @relation("ClientSavedFreelancers")
+  savedByClients             SavedFreelancer[] @relation("FreelancerSavedByClients")
+  hiredJobs                  Job[] @relation("HiredJobs")
+  taskProgress               UserTaskProgress[]
+  taskSubmissions            TaskSubmission[]
 }
 
 model OnrampPayment {
@@ -32,4 +47,205 @@ model OnrampPayment {
   txHash        String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+model Job {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String
+  budget      Int
+  status      String    @default("OPEN")
+  clientId    Int
+  hiredFreelancerId Int?
+  client      User      @relation("ClientJobs", fields: [clientId], references: [id])
+  hiredFreelancer User? @relation("HiredJobs", fields: [hiredFreelancerId], references: [id])
+  proposals   Proposal[]
+  reviews     Review[]
+  savedBy     SavedJob[]
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Proposal {
+  id           Int      @id @default(autoincrement())
+  jobId        Int
+  freelancerId Int
+  coverLetter  String
+  status       String   @default("SUBMITTED")
+  job          Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  freelancer   User     @relation("FreelancerProposals", fields: [freelancerId], references: [id])
+  messages     Message[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([jobId, freelancerId])
+}
+
+model FreelancerProfile {
+  id                    Int      @id @default(autoincrement())
+  userId                Int      @unique
+  professionalTitle     String
+  bio                   String
+  skills                String
+  experienceLevel       String
+  hourlyRateUsd         Int
+  country               String
+  city                  String
+  phone                 String?
+  languages             String
+  portfolioUrl          String?
+  githubUrl             String?
+  linkedinUrl           String?
+  education             String?
+  certifications        String?
+  availability          String
+  preferredWorkingHours String?
+  responseTime          String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ClientProfile {
+  id                      Int      @id @default(autoincrement())
+  userId                  Int      @unique
+  accountType             String
+  displayName             String
+  companyName             String?
+  tagline                 String?
+  about                   String
+  industry                String?
+  companySize             String
+  websiteUrl              String?
+  country                 String
+  city                    String?
+  timezone                String
+  phone                   String?
+  linkedinUrl             String?
+  preferredLanguages      String
+  budgetRange             String
+  projectTypes            String?
+  hiringGoals             String
+  communicationPreference String
+  responseExpectation     String
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  proposalId Int
+  senderId   Int
+  receiverId Int
+  body       String
+  proposal   Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  sender     User     @relation("MessageSender", fields: [senderId], references: [id])
+  receiver   User     @relation("MessageReceiver", fields: [receiverId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  type      String
+  title     String
+  body      String
+  link      String?
+  isRead    Boolean  @default(false)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Review {
+  id           Int      @id @default(autoincrement())
+  jobId         Int
+  authorId      Int
+  targetUserId  Int
+  rating        Int
+  comment       String
+  job           Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  author        User     @relation("ReviewAuthor", fields: [authorId], references: [id])
+  targetUser    User     @relation("ReviewTarget", fields: [targetUserId], references: [id])
+  createdAt     DateTime @default(now())
+
+  @@unique([jobId, authorId])
+}
+
+model SavedJob {
+  id        Int      @id @default(autoincrement())
+  userId     Int
+  jobId      Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, jobId])
+}
+
+model SavedFreelancer {
+  id           Int      @id @default(autoincrement())
+  clientId     Int
+  freelancerId Int
+  client       User     @relation("ClientSavedFreelancers", fields: [clientId], references: [id], onDelete: Cascade)
+  freelancer   User     @relation("FreelancerSavedByClients", fields: [freelancerId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+
+  @@unique([clientId, freelancerId])
+}
+
+model Task {
+  id                 Int      @id @default(autoincrement())
+  title              String
+  description        String
+  difficulty         String   @default("BEGINNER")
+  category           String   @default("GENERAL")
+  rewardTokens       Int
+  timeLimit          Int?
+  starterCode        String?
+  codingChallenge    CodingChallenge?
+  userProgress       UserTaskProgress[]
+  submissions        TaskSubmission[]
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model CodingChallenge {
+  id           Int      @id @default(autoincrement())
+  taskId       Int      @unique
+  language     String   @default("javascript")
+  testCases    String
+  expectedOutput String
+  task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+}
+
+model UserTaskProgress {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  taskId       Int
+  completed    Boolean  @default(false)
+  completedAt  DateTime?
+  tokensEarned Int      @default(0)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, taskId])
+}
+
+model TaskSubmission {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  taskId       Int
+  code         String
+  output       String?
+  testsPassed  Boolean  @default(false)
+  passedTests  Int      @default(0)
+  totalTests   Int      @default(0)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
 }
