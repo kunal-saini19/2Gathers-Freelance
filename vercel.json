@@ -1,7 +1,7 @@
 {
   "functions": {
     "app/api/**": {
-      "runtime": "nodejs@20.x"
+      "runtime": "nodejs20.x"
     }
   },
   "buildCommand": "npm run build && npm run postinstall",
