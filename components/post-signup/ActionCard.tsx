@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { LucideIcon } from "lucide-react";
+import { ArrowRight, LucideIcon } from "lucide-react";
 
 type ActionCardProps = {
   title: string;
@@ -18,24 +18,26 @@ export function ActionCard({ title, description, buttonLabel, icon: Icon, onClic
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
-      whileHover={{ scale: 1.02, y: -2 }}
-      className="group relative overflow-hidden rounded-3xl border border-white/40 bg-white/55 p-6 shadow-xl backdrop-blur-md"
+      whileHover={{ y: -4 }}
+      className="group relative overflow-hidden rounded-2xl border border-surface-200/60 bg-white/90 p-6 shadow-card-md backdrop-blur-sm transition-shadow duration-300 hover:shadow-card-lg"
     >
+      {/* Gradient background on hover */}
       <div className={`pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 ${accentClass}`} />
 
       <div className="relative z-10">
-        <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-white/50 bg-white/70 text-slate-700 shadow-sm">
-          <Icon className="h-6 w-6" />
+        <div className="mb-5 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-surface-50 to-surface-100 text-surface-700 shadow-sm ring-1 ring-surface-200/80 transition-all duration-300 group-hover:shadow-md group-hover:ring-primary-200">
+          <Icon className="h-7 w-7" />
         </div>
 
-        <h3 className="text-2xl font-semibold text-slate-900">{title}</h3>
-        <p className="mt-2 text-sm leading-6 text-slate-700">{description}</p>
+        <h3 className="font-heading text-2xl font-semibold text-surface-900">{title}</h3>
+        <p className="mt-2 text-sm leading-relaxed text-surface-600">{description}</p>
 
         <button
           onClick={onClick}
-          className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+          className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-surface-900 px-5 py-3.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:bg-surface-800 active:scale-[0.98]"
         >
           {buttonLabel}
+          <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
         </button>
       </div>
     </motion.article>

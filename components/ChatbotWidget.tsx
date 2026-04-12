@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Send, Sparkles } from "lucide-react";
 import type { MockJob } from "@/lib/db";
 
 type Message = {
@@ -10,6 +11,7 @@ type Message = {
 };
 
 export function ChatbotWidget({ suggestions }: { suggestions: MockJob[] }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
@@ -28,6 +30,12 @@ export function ChatbotWidget({ suggestions }: { suggestions: MockJob[] }) {
     ],
     [],
   );
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, isLoading]);
 
   async function sendMessage(text: string) {
     if (!text.trim() || isLoading) return;
@@ -78,66 +86,120 @@ export function ChatbotWidget({ suggestions }: { suggestions: MockJob[] }) {
 
   return (
     <section className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-      <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm backdrop-blur-sm">
-        <div className="space-y-4">
+      {/* Chat area */}
+      <div className="flex flex-col overflow-hidden rounded-2xl border border-surface-200/80 bg-white shadow-card-sm">
+        {/* Header */}
+        <div className="flex items-center gap-3 border-b border-surface-100 px-5 py-3.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 shadow-sm">
+            <Sparkles className="h-4 w-4 text-white" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-surface-900">AI Assistant</p>
+            <p className="text-xs text-surface-500">Powered by Groq</p>
+          </div>
+          {isLoading && (
+            <div className="ml-auto flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary-500" style={{ animationDelay: "0ms" }} />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary-500" style={{ animationDelay: "150ms" }} />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary-500" style={{ animationDelay: "300ms" }} />
+            </div>
+          )}
+        </div>
+
+        {/* Messages */}
+        <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-5" style={{ maxHeight: "420px" }}>
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-6 ${message.role === "user" ? "ml-auto bg-slate-900 text-white" : "bg-slate-100 text-slate-700"}`}
+              className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
             >
-              {message.content}
+              <div
+                className={`max-w-[82%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                  message.role === "user"
+                    ? "bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-md shadow-primary-600/20"
+                    : "bg-surface-50 text-surface-700 ring-1 ring-surface-200/80"
+                }`}
+              >
+                {message.content}
+              </div>
             </div>
           ))}
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="flex items-center gap-1.5 rounded-2xl bg-surface-50 px-4 py-3 ring-1 ring-surface-200/80">
+                <span className="h-2 w-2 animate-bounce rounded-full bg-surface-400" style={{ animationDelay: "0ms" }} />
+                <span className="h-2 w-2 animate-bounce rounded-full bg-surface-400" style={{ animationDelay: "150ms" }} />
+                <span className="h-2 w-2 animate-bounce rounded-full bg-surface-400" style={{ animationDelay: "300ms" }} />
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="mt-5 flex gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage(input);
-              }
-            }}
-            disabled={isLoading}
-            placeholder="Ask the assistant something..."
-            className="flex-1 bg-transparent px-1 text-sm outline-none placeholder:text-slate-400 disabled:opacity-50"
-          />
-          <button
-            type="button"
-            onClick={() => sendMessage(input)}
-            disabled={!input.trim() || isLoading}
-            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? "..." : "Send"}
-          </button>
+        {/* Input */}
+        <div className="border-t border-surface-100 p-3">
+          <div className="flex gap-2 rounded-xl bg-surface-50 p-1.5 ring-1 ring-surface-200/80 focus-within:ring-2 focus-within:ring-primary-500/30 transition-all">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  sendMessage(input);
+                }
+              }}
+              disabled={isLoading}
+              placeholder="Ask the assistant something..."
+              className="flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-surface-400 disabled:opacity-50"
+            />
+            <button
+              type="button"
+              onClick={() => sendMessage(input)}
+              disabled={!input.trim() || isLoading}
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-600 text-white shadow-sm transition-all hover:bg-primary-500 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Send className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
 
-      <aside className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm backdrop-blur-sm">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Suggestions</p>
-        <div className="mt-4 space-y-3">
-          {quickReplies.map((reply) => (
-            <button
-              key={reply}
-              type="button"
-              onClick={() => sendMessage(reply)}
-              disabled={isLoading}
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {reply}
-            </button>
-          ))}
+      {/* Sidebar */}
+      <aside className="space-y-5">
+        <div className="rounded-2xl border border-surface-200/80 bg-white p-5 shadow-card-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-surface-400">
+            Quick replies
+          </p>
+          <div className="mt-3 space-y-2">
+            {quickReplies.map((reply) => (
+              <button
+                key={reply}
+                type="button"
+                onClick={() => sendMessage(reply)}
+                disabled={isLoading}
+                className="w-full rounded-xl border border-surface-200/80 bg-white px-4 py-3 text-left text-sm text-surface-700 shadow-card-sm transition-all duration-200 hover:border-primary-200 hover:bg-primary-50/50 hover:text-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {reply}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="mt-6 rounded-2xl bg-slate-50 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Recommended jobs</p>
-          <div className="mt-3 space-y-3">
+        <div className="rounded-2xl border border-surface-200/80 bg-white p-5 shadow-card-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-surface-400">
+            Recommended jobs
+          </p>
+          <div className="mt-3 space-y-2.5">
             {suggestions.slice(0, 3).map((job) => (
-              <div key={job.id} className="rounded-xl border border-slate-200 bg-white p-3">
-                <p className="text-sm font-medium text-slate-900">{job.title}</p>
-                <p className="mt-1 text-xs text-slate-500">{job.client} · {job.matchScore}% fit</p>
+              <div
+                key={job.id}
+                className="rounded-xl border border-surface-200/80 bg-surface-50/50 p-3 transition-colors hover:bg-primary-50/30"
+              >
+                <p className="text-sm font-medium text-surface-900">{job.title}</p>
+                <p className="mt-1 flex items-center gap-1.5 text-xs text-surface-500">
+                  <span>{job.client}</span>
+                  <span className="text-surface-300">·</span>
+                  <span className="font-semibold text-primary-600">{job.matchScore}% fit</span>
+                </p>
               </div>
             ))}
           </div>

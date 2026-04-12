@@ -5,7 +5,11 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Coins } from "lucide-react";
+import { motion } from "framer-motion";
+import {
+  Coins, Briefcase, Search, MessageSquare, Wallet, Code2, Plus, Bell, CheckCheck,
+  BookmarkCheck, UserMinus, ChevronDown, ChevronUp
+} from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import {
   adminApi,
@@ -21,12 +25,12 @@ import { useAuth } from "@/context/AuthContext";
 
 const FreelancerAnalytics = dynamic(() => import("@/features/dashboard/components/FreelancerAnalytics").then((mod) => mod.FreelancerAnalytics), {
   ssr: false,
-  loading: () => <div className="mt-6 card-surface p-6 text-sm text-slate-600">Loading freelancer analytics...</div>,
+  loading: () => <div className="mt-6 skeleton-card" />,
 });
 
 const ClientAnalytics = dynamic(() => import("@/features/dashboard/components/ClientAnalytics").then((mod) => mod.ClientAnalytics), {
   ssr: false,
-  loading: () => <div className="mt-6 card-surface p-6 text-sm text-slate-600">Loading client analytics...</div>,
+  loading: () => <div className="mt-6 skeleton-card" />,
 });
 
 type JobListItem = {
@@ -120,6 +124,13 @@ type ClientProfileSummary = {
   country: string;
   timezone: string;
   phone?: string | null;
+};
+
+const proposalStatusConfig: Record<string, string> = {
+  ACCEPTED: "bg-success-50 text-success-700 ring-success-200",
+  SHORTLISTED: "bg-warning-50 text-warning-700 ring-warning-200",
+  REJECTED: "bg-danger-50 text-danger-700 ring-danger-200",
+  SUBMITTED: "bg-surface-100 text-surface-700 ring-surface-200",
 };
 
 export default function DashboardPage() {
@@ -327,92 +338,100 @@ export default function DashboardPage() {
     enabled: user?.role === "CLIENT",
   });
 
+  const quickActions = [
+    { label: "Browse jobs", icon: Search, href: "/jobs", show: true },
+    { label: "Get Jobs", icon: Briefcase, href: "/freelancer/jobs", show: user?.role === "FREELANCER" },
+    { label: "Solve Tasks", icon: Code2, href: "/tasks", show: user?.role === "FREELANCER" },
+    { label: "Post a Job", icon: Plus, href: "/client/post-job", show: user?.role === "CLIENT" },
+    { label: "Open Wallet", icon: Wallet, href: "/wallet", show: true },
+  ].filter((a) => a.show);
+
   return (
     <DashboardLayout
       title="Dashboard"
       subtitle={`Welcome ${user?.username ?? "back"}. Review your wallet, role, and quick actions from one focused place.`}
       sidebar={
         <div className="space-y-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Workspace</p>
-          <nav className="space-y-2">
-            <button onClick={() => router.push("/dashboard")} className="btn-secondary btn-md w-full justify-start">
-              Overview
-            </button>
-            {user?.role === "FREELANCER" ? (
-              <button onClick={() => router.push("/freelancer/jobs")} className="btn-secondary btn-md w-full justify-start">
-                Get Jobs
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-surface-500">Workspace</p>
+          <nav className="space-y-1">
+            {[
+              { label: "Overview", href: "/dashboard", icon: Search },
+              ...(user?.role === "FREELANCER" ? [{ label: "Get Jobs", href: "/freelancer/jobs", icon: Briefcase }] : []),
+              ...(user?.role === "CLIENT" ? [{ label: "Post a Job", href: "/client/post-job", icon: Plus }] : []),
+              { label: "Job Board", href: "/jobs", icon: Search },
+              { label: "Messages & Support", href: "/support", icon: MessageSquare },
+              { label: "Wallet", href: "/wallet", icon: Wallet },
+              ...(user?.role === "FREELANCER" ? [{ label: "Coding Tasks", href: "/tasks", icon: Code2 }] : []),
+            ].map((item) => (
+              <button
+                key={item.href}
+                onClick={() => router.push(item.href)}
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-surface-600 transition-colors hover:bg-primary-50 hover:text-primary-700"
+              >
+                <item.icon className="h-4 w-4" />
+                {item.label}
               </button>
-            ) : null}
-            {user?.role === "CLIENT" ? (
-              <button onClick={() => router.push("/client/post-job")} className="btn-secondary btn-md w-full justify-start">
-                Post a Job
-              </button>
-            ) : null}
-            <button onClick={() => router.push("/jobs")} className="btn-secondary btn-md w-full justify-start">
-              Job Board
-            </button>
-            <button onClick={() => router.push("/support")} className="btn-secondary btn-md w-full justify-start">
-              Messages & Support
-            </button>
-            <button onClick={() => router.push("/wallet")} className="btn-secondary btn-md w-full justify-start">
-              Wallet
-            </button>
-            {user?.role === "FREELANCER" ? (
-              <button onClick={() => router.push("/tasks")} className="btn-secondary btn-md w-full justify-start">
-                Coding Tasks
-              </button>
-            ) : null}
+            ))}
           </nav>
         </div>
       }
     >
+      {/* Wallet + Quick Actions */}
       <section className="grid gap-5 md:grid-cols-3">
-        <article className="card-surface p-6">
-          <p className="text-sm text-slate-600">Wallet balance</p>
-          <div className="mt-2 flex items-center gap-2 text-3xl font-bold text-emerald-700">
-            <Coins className="h-7 w-7" />
-            {dashboard?.walletBalance ?? 0}
+        <motion.article
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden card-surface p-6"
+        >
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-success-500 via-primary-500 to-accent-500" />
+          <p className="mt-1 text-sm text-surface-500">Wallet balance</p>
+          <div className="mt-2 flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-success-50 to-success-100 text-success-600">
+              <Coins className="h-6 w-6" />
+            </div>
+            <span className="font-heading text-4xl font-bold text-surface-900">
+              {dashboard?.walletBalance ?? 0}
+            </span>
           </div>
-        </article>
+        </motion.article>
 
-        <article className="card-surface p-6 md:col-span-2">
-          <p className="text-sm text-slate-600">Quick actions</p>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <button onClick={() => router.push("/jobs")} className="btn-primary btn-md">
-              Browse jobs
-            </button>
-            {user?.role === "FREELANCER" ? (
-              <button onClick={() => router.push("/freelancer/jobs")} className="btn-primary btn-md">
-                Get Jobs
+        <motion.article
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="card-surface p-6 md:col-span-2"
+        >
+          <p className="text-sm text-surface-500">Quick actions</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {quickActions.map((action) => (
+              <button
+                key={action.href}
+                onClick={() => router.push(action.href)}
+                className="btn-primary btn-sm inline-flex items-center gap-1.5"
+              >
+                <action.icon className="h-3.5 w-3.5" />
+                {action.label}
               </button>
-            ) : null}
-            {user?.role === "FREELANCER" ? (
-              <button onClick={() => router.push("/tasks")} className="btn-primary btn-md">
-                Solve Coding Tasks
-              </button>
-            ) : null}
-            {user?.role === "CLIENT" ? (
-              <button onClick={() => router.push("/client/post-job")} className="btn-primary btn-md">
-                Post a Job
-              </button>
-            ) : null}
-            <button onClick={() => router.push("/wallet")} className="btn-secondary btn-md">
-              Open wallet
-            </button>
+            ))}
           </div>
-        </article>
+        </motion.article>
       </section>
 
+      {/* CLIENT Section */}
       {user?.role === "CLIENT" ? (
         <>
-          <section className="mt-6 card-surface p-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-xl font-semibold text-slate-900">Notifications</h2>
-              <button onClick={() => markAllReadMutation.mutate()} className="btn-secondary btn-md" disabled={markAllReadMutation.isPending}>
-                Mark all read ({notificationsQuery.data?.unreadCount || 0})
+          {/* Notifications */}
+          <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mt-6 overflow-hidden rounded-2xl border border-surface-200/80 bg-white shadow-card-sm">
+            <div className="flex items-center justify-between gap-3 border-b border-surface-100 px-6 py-4">
+              <div className="flex items-center gap-2">
+                <Bell className="h-4 w-4 text-surface-500" />
+                <h2 className="font-heading text-lg font-semibold text-surface-900">Notifications</h2>
+              </div>
+              <button onClick={() => markAllReadMutation.mutate()} className="btn-ghost btn-sm text-xs" disabled={markAllReadMutation.isPending}>
+                <CheckCheck className="h-3.5 w-3.5" /> Mark all read ({notificationsQuery.data?.unreadCount || 0})
               </button>
             </div>
-            <div className="mt-4 space-y-3">
+            <div className="max-h-[300px] divide-y divide-surface-100 overflow-y-auto">
               {(notificationsQuery.data?.notifications || []).map((item: any) => (
                 item.link ? (
                   <Link
@@ -425,26 +444,32 @@ export default function DashboardPage() {
                       }
                       router.push(item.link);
                     }}
-                    className={`block rounded-xl border p-4 transition hover:border-cyan-400 hover:bg-cyan-50/60 ${item.isRead ? "border-slate-200 bg-white" : "border-cyan-200 bg-cyan-50/50"}`}
+                    className={`block px-6 py-4 transition-colors hover:bg-primary-50/30 ${!item.isRead ? "bg-primary-50/20" : ""}`}
                   >
-                    <p className="font-medium text-slate-900">{item.title}</p>
-                    <p className="mt-1 text-sm text-slate-600">{item.body}</p>
-                    <p className="mt-2 text-xs font-medium text-cyan-700">Tap to review request</p>
+                    <div className="flex items-start gap-2">
+                      {!item.isRead && <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-primary-600" />}
+                      <div>
+                        <p className="font-medium text-surface-900">{item.title}</p>
+                        <p className="mt-1 text-sm text-surface-500">{item.body}</p>
+                        <p className="mt-1 text-xs font-medium text-primary-600">Tap to review →</p>
+                      </div>
+                    </div>
                   </Link>
                 ) : (
-                  <article key={item.id} className={`rounded-xl border p-4 ${item.isRead ? "border-slate-200 bg-white" : "border-cyan-200 bg-cyan-50/50"}`}>
-                    <p className="font-medium text-slate-900">{item.title}</p>
-                    <p className="mt-1 text-sm text-slate-600">{item.body}</p>
+                  <article key={item.id} className={`px-6 py-4 ${!item.isRead ? "bg-primary-50/20" : ""}`}>
+                    <p className="font-medium text-surface-900">{item.title}</p>
+                    <p className="mt-1 text-sm text-surface-500">{item.body}</p>
                   </article>
                 )
               ))}
-              {!notificationsQuery.data?.notifications?.length ? <p className="text-sm text-slate-600">No notifications yet.</p> : null}
+              {!notificationsQuery.data?.notifications?.length ? <p className="px-6 py-4 text-sm text-surface-500">No notifications yet.</p> : null}
             </div>
-          </section>
+          </motion.section>
 
-          <section className="mt-6 card-surface p-6">
+          {/* Client Profile */}
+          <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="mt-6 card-surface p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-xl font-semibold text-slate-900">Client profile</h2>
+              <h2 className="font-heading text-xl font-semibold text-surface-900">Client profile</h2>
               <button onClick={() => router.push("/onboarding/client?edit=1")} className="btn-secondary btn-md">
                 {clientProfileQuery.data ? "Edit profile" : "Complete profile"}
               </button>
@@ -452,43 +477,36 @@ export default function DashboardPage() {
 
             {clientProfileQuery.data ? (
               <div className="mt-4 grid gap-3 md:grid-cols-2">
-                <div className="rounded-xl border border-slate-200 p-4">
-                  <p className="text-xs uppercase tracking-wider text-slate-500">Identity</p>
-                  <p className="mt-1 font-medium text-slate-900">{clientProfileQuery.data.displayName}</p>
-                  <p className="mt-1 text-sm text-slate-600">{clientProfileQuery.data.accountType === "COMPANY" ? clientProfileQuery.data.companyName || "Company" : "Individual client"}</p>
-                </div>
-                <div className="rounded-xl border border-slate-200 p-4">
-                  <p className="text-xs uppercase tracking-wider text-slate-500">Budget range</p>
-                  <p className="mt-1 font-medium text-slate-900">{clientProfileQuery.data.budgetRange}</p>
-                </div>
-                <div className="rounded-xl border border-slate-200 p-4">
-                  <p className="text-xs uppercase tracking-wider text-slate-500">Country</p>
-                  <p className="mt-1 font-medium text-slate-900">
-                    {clientProfileQuery.data.country}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-slate-200 p-4">
-                  <p className="text-xs uppercase tracking-wider text-slate-500">Timezone</p>
-                  <p className="mt-1 font-medium text-slate-900">{clientProfileQuery.data.timezone}</p>
-                  {clientProfileQuery.data.phone ? <p className="mt-1 text-sm text-slate-600">{clientProfileQuery.data.phone}</p> : null}
-                </div>
+                {[
+                  { label: "Identity", value: clientProfileQuery.data.displayName, sub: clientProfileQuery.data.accountType === "COMPANY" ? clientProfileQuery.data.companyName || "Company" : "Individual client" },
+                  { label: "Budget range", value: clientProfileQuery.data.budgetRange },
+                  { label: "Country", value: clientProfileQuery.data.country },
+                  { label: "Timezone", value: clientProfileQuery.data.timezone, sub: clientProfileQuery.data.phone || undefined },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-xl border border-surface-200/60 bg-surface-50/50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-surface-400">{item.label}</p>
+                    <p className="mt-1 font-medium text-surface-900">{item.value}</p>
+                    {item.sub ? <p className="mt-1 text-sm text-surface-500">{item.sub}</p> : null}
+                  </div>
+                ))}
               </div>
             ) : (
-              <p className="mt-3 text-sm text-slate-600">Complete your client profile to build trust with freelancers before posting projects.</p>
+              <p className="mt-3 text-sm text-surface-500">Complete your client profile to build trust with freelancers before posting projects.</p>
             )}
-          </section>
+          </motion.section>
 
           <ClientAnalytics />
 
-          <section className="mt-6 card-surface p-6">
+          {/* Client Workspace */}
+          <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-6 card-surface p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-xl font-semibold text-slate-900">Client workspace</h2>
-              <div className="flex flex-wrap gap-2 text-xs">
+              <h2 className="font-heading text-xl font-semibold text-surface-900">Client workspace</h2>
+              <div className="flex gap-1.5 rounded-xl bg-surface-100 p-1">
                 <button
                   type="button"
                   onClick={() => setClientViewTab("proposals")}
-                  className={`rounded-full px-3 py-1 font-semibold transition ${
-                    clientViewTab === "proposals" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                    clientViewTab === "proposals" ? "bg-white text-surface-900 shadow-card-sm" : "text-surface-500 hover:text-surface-700"
                   }`}
                 >
                   Proposals ({proposalsQuery.data?.length || 0})
@@ -496,162 +514,136 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   onClick={() => setClientViewTab("saved")}
-                  className={`rounded-full px-3 py-1 font-semibold transition ${
-                    clientViewTab === "saved" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                    clientViewTab === "saved" ? "bg-white text-surface-900 shadow-card-sm" : "text-surface-500 hover:text-surface-700"
                   }`}
                 >
-                  Saved freelancers ({savedFreelancersQuery.data?.length || 0})
+                  Saved ({savedFreelancersQuery.data?.length || 0})
                 </button>
               </div>
             </div>
 
             {clientViewTab === "proposals" ? (
               <div className="mt-4 space-y-4">
-                <h3 className="text-lg font-semibold text-slate-900">Applications on your jobs</h3>
                 {!myJobsQuery.data?.length ? (
-                  <p className="text-sm text-slate-600">You have not posted any jobs yet. Create one in Jobs to start receiving applications.</p>
+                  <p className="text-sm text-surface-500">You have not posted any jobs yet.</p>
                 ) : (
                   <>
-                    <label className="space-y-2">
-                      <span className="text-sm font-medium text-slate-700">Select your job</span>
-                      <select className="input" value={selectedJobId} onChange={(event) => setSelectedJobId(Number(event.target.value))}>
-                        {myJobsQuery.data.map((job) => (
-                          <option key={job.id} value={job.id}>
-                            {job.title} ({proposalCountsByJob[job.id] || 0})
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                    <select className="input" value={selectedJobId} onChange={(event) => setSelectedJobId(Number(event.target.value))}>
+                      {myJobsQuery.data.map((job) => (
+                        <option key={job.id} value={job.id}>
+                          {job.title} ({proposalCountsByJob[job.id] || 0})
+                        </option>
+                      ))}
+                    </select>
 
-                    <div className="rounded-xl border border-slate-200 p-4">
-                      <p className="font-medium text-slate-900">{selectedJob?.title}</p>
-                      <p className="mt-1 text-xs text-slate-500">Proposals for selected job: {visibleClientProposals.length}</p>
-                      <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                        {(["ALL", "SUBMITTED", "SHORTLISTED", "ACCEPTED", "REJECTED"] as const).map((status) => (
-                          <button
-                            key={status}
-                            type="button"
-                            onClick={() => setProposalStatusFilter(status)}
-                            className={`rounded-full px-3 py-1 font-semibold transition ${
-                              proposalStatusFilter === status
-                                ? "bg-slate-900 text-white"
-                                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                            }`}
-                          >
-                            {status === "ALL" ? "All" : status.toLowerCase()}
-                          </button>
-                        ))}
-                      </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(["ALL", "SUBMITTED", "SHORTLISTED", "ACCEPTED", "REJECTED"] as const).map((status) => (
+                        <button
+                          key={status}
+                          type="button"
+                          onClick={() => setProposalStatusFilter(status)}
+                          className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                            proposalStatusFilter === status
+                              ? "bg-surface-900 text-white shadow-sm"
+                              : "bg-surface-100 text-surface-600 hover:bg-surface-200"
+                          }`}
+                        >
+                          {status === "ALL" ? "All" : status.charAt(0) + status.slice(1).toLowerCase()}
+                        </button>
+                      ))}
                     </div>
 
                     <div className="space-y-3">
-                      {visibleClientProposals.map((proposal) => (
-                        <article key={proposal.id} className="rounded-xl border border-slate-200 bg-white p-4">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <p className="font-medium text-slate-900">{proposal.freelancer.username || proposal.freelancer.name}</p>
-                            <div className="flex items-center gap-2">
-                              <span
-                                className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                                  getDisplayedProposalStatus(proposal) === "ACCEPTED"
-                                    ? "bg-emerald-100 text-emerald-700"
-                                    : getDisplayedProposalStatus(proposal) === "SHORTLISTED"
-                                      ? "bg-amber-100 text-amber-700"
-                                      : getDisplayedProposalStatus(proposal) === "REJECTED"
-                                        ? "bg-rose-100 text-rose-700"
-                                        : "bg-slate-100 text-slate-700"
-                                }`}
-                              >
-                                {getDisplayedProposalStatus(proposal)}
-                              </span>
-                              <p className="text-xs text-slate-500">{new Date(proposal.createdAt).toLocaleString()}</p>
+                      {visibleClientProposals.map((proposal) => {
+                        const initials = (proposal.freelancer.username || proposal.freelancer.name || "U").slice(0, 2).toUpperCase();
+                        const displayStatus = getDisplayedProposalStatus(proposal);
+                        return (
+                          <article key={proposal.id} className="rounded-xl border border-surface-200/80 bg-white p-4 transition-colors hover:bg-surface-50/50">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div className="flex items-center gap-3">
+                                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 text-[11px] font-bold text-white shadow-sm">
+                                  {initials}
+                                </div>
+                                <div>
+                                  <p className="font-medium text-surface-900">{proposal.freelancer.username || proposal.freelancer.name}</p>
+                                  <p className="text-xs text-surface-500">{proposal.freelancer.email}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold ring-1 ${proposalStatusConfig[displayStatus] || "bg-surface-100 text-surface-700"}`}>
+                                  {displayStatus}
+                                </span>
+                                <p className="text-xs text-surface-400">{new Date(proposal.createdAt).toLocaleDateString()}</p>
+                              </div>
                             </div>
-                          </div>
-                          <p className="mt-1 text-xs text-slate-500">{proposal.freelancer.email}</p>
-                          <p className="mt-1 text-xs text-slate-500">Job: {proposal.job?.title || selectedJob?.title || "Unknown job"}</p>
-                          <p className="mt-3 text-sm text-slate-700">{proposal.coverLetter}</p>
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            <button
-                              type="button"
-                              className="btn-secondary btn-md"
-                              disabled={updateProposalStatusMutation.isPending}
-                              onClick={() => updateProposalStatusMutation.mutate({ proposalId: proposal.id, status: "SHORTLISTED" })}
-                            >
-                              Shortlist
-                            </button>
-                            <button
-                              type="button"
-                              className="btn-primary btn-md"
-                              disabled={updateProposalStatusMutation.isPending}
-                              onClick={() => updateProposalStatusMutation.mutate({ proposalId: proposal.id, status: "ACCEPTED" })}
-                            >
-                              Accept
-                            </button>
-                            <button
-                              type="button"
-                              className="btn-ghost btn-md text-rose-600 hover:bg-rose-50 hover:text-rose-700"
-                              disabled={updateProposalStatusMutation.isPending}
-                              onClick={() => updateProposalStatusMutation.mutate({ proposalId: proposal.id, status: "REJECTED" })}
-                            >
-                              Reject
-                            </button>
-                            <button
-                              type="button"
-                              className="btn-secondary btn-md"
-                              disabled={toggleSavedFreelancerMutation.isPending}
-                              onClick={() => toggleSavedFreelancerMutation.mutate(proposal.freelancer.id)}
-                            >
-                              Save freelancer
-                            </button>
-                          </div>
-                        </article>
-                      ))}
-                      {!visibleClientProposals.length ? <p className="text-sm text-slate-600">No applications yet for this job.</p> : null}
+                            <p className="mt-3 text-sm text-surface-600">{proposal.coverLetter}</p>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              <button type="button" className="btn-secondary btn-sm" disabled={updateProposalStatusMutation.isPending}
+                                onClick={() => updateProposalStatusMutation.mutate({ proposalId: proposal.id, status: "SHORTLISTED" })}>
+                                Shortlist
+                              </button>
+                              <button type="button" className="btn-primary btn-sm" disabled={updateProposalStatusMutation.isPending}
+                                onClick={() => updateProposalStatusMutation.mutate({ proposalId: proposal.id, status: "ACCEPTED" })}>
+                                Accept
+                              </button>
+                              <button type="button" className="btn-ghost btn-sm text-danger-600 hover:bg-danger-50 hover:text-danger-700" disabled={updateProposalStatusMutation.isPending}
+                                onClick={() => updateProposalStatusMutation.mutate({ proposalId: proposal.id, status: "REJECTED" })}>
+                                Reject
+                              </button>
+                              <button type="button" className="btn-secondary btn-sm" disabled={toggleSavedFreelancerMutation.isPending}
+                                onClick={() => toggleSavedFreelancerMutation.mutate(proposal.freelancer.id)}>
+                                <BookmarkCheck className="h-3.5 w-3.5" /> Save
+                              </button>
+                            </div>
+                          </article>
+                        );
+                      })}
+                      {!visibleClientProposals.length ? <p className="text-sm text-surface-500">No applications yet for this job.</p> : null}
                     </div>
                   </>
                 )}
               </div>
             ) : (
               <div className="mt-4 space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm text-slate-600">Freelancers you saved for quick access and future outreach.</p>
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-                    {savedFreelancersQuery.data?.length || 0} saved
-                  </span>
-                </div>
-                {(savedFreelancersQuery.data || []).map((item) => (
-                  <article key={item.id} className="rounded-xl border border-slate-200 bg-white p-4">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <p className="font-medium text-slate-900">{item.freelancer.username || item.freelancer.name}</p>
-                        <p className="text-xs text-slate-500">{item.freelancer.email}</p>
+                {(savedFreelancersQuery.data || []).map((item) => {
+                  const initials = (item.freelancer.username || item.freelancer.name || "U").slice(0, 2).toUpperCase();
+                  return (
+                    <article key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-surface-200/60 bg-white p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 text-[11px] font-bold text-white">
+                          {initials}
+                        </div>
+                        <div>
+                          <p className="font-medium text-surface-900">{item.freelancer.username || item.freelancer.name}</p>
+                          <p className="text-xs text-surface-500">{item.freelancer.email}</p>
+                        </div>
                       </div>
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-700">
-                        {item.freelancer.role}
-                      </span>
-                      <button
-                        type="button"
-                        className="btn-ghost btn-md text-rose-600 hover:bg-rose-50 hover:text-rose-700"
-                        onClick={() => toggleSavedFreelancerMutation.mutate(item.freelancer.id)}
-                        disabled={toggleSavedFreelancerMutation.isPending}
-                      >
-                        Remove
+                      <button type="button" className="btn-ghost btn-sm text-danger-600 hover:bg-danger-50" disabled={toggleSavedFreelancerMutation.isPending}
+                        onClick={() => toggleSavedFreelancerMutation.mutate(item.freelancer.id)}>
+                        <UserMinus className="h-3.5 w-3.5" /> Remove
                       </button>
-                    </div>
-                  </article>
-                ))}
-                {!savedFreelancersQuery.data?.length ? <p className="text-sm text-slate-600">No saved freelancers yet.</p> : null}
+                    </article>
+                  );
+                })}
+                {!savedFreelancersQuery.data?.length ? <p className="text-sm text-surface-500">No saved freelancers yet.</p> : null}
               </div>
             )}
 
-            {proposalActionStatus ? <p className="mt-4 rounded-lg bg-slate-100 px-4 py-2 text-sm text-slate-700">{proposalActionStatus}</p> : null}
-          </section>
+            {proposalActionStatus ? (
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4 rounded-xl border border-primary-100 bg-primary-50 px-4 py-2 text-sm text-primary-700">
+                {proposalActionStatus}
+              </motion.p>
+            ) : null}
+          </motion.section>
         </>
       ) : null}
 
+      {/* FREELANCER Section */}
       {user?.role === "FREELANCER" ? (
-        <section className="mt-6 card-surface p-6">
+        <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mt-6 card-surface p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-xl font-semibold text-slate-900">Freelancer profile</h2>
+            <h2 className="font-heading text-xl font-semibold text-surface-900">Freelancer profile</h2>
             <button onClick={() => router.push("/onboarding/freelancer?edit=1")} className="btn-secondary btn-md">
               {freelancerProfileQuery.data ? "Edit profile" : "Complete profile"}
             </button>
@@ -659,70 +651,66 @@ export default function DashboardPage() {
 
           {freelancerProfileQuery.data ? (
             <div className="mt-4 grid gap-3 md:grid-cols-2">
-              <div className="rounded-xl border border-slate-200 p-4">
-                <p className="text-xs uppercase tracking-wider text-slate-500">Title</p>
-                <p className="mt-1 font-medium text-slate-900">{freelancerProfileQuery.data.professionalTitle}</p>
-                <p className="mt-1 text-sm text-slate-600">{freelancerProfileQuery.data.experienceLevel}</p>
-              </div>
-              <div className="rounded-xl border border-slate-200 p-4">
-                <p className="text-xs uppercase tracking-wider text-slate-500">Skills</p>
-                <p className="mt-1 font-medium text-slate-900">{freelancerProfileQuery.data.skills}</p>
-              </div>
-              <div className="rounded-xl border border-slate-200 p-4">
-                <p className="text-xs uppercase tracking-wider text-slate-500">Rate</p>
-                <p className="mt-1 font-medium text-slate-900">${freelancerProfileQuery.data.hourlyRateUsd}/hr</p>
-              </div>
-              <div className="rounded-xl border border-slate-200 p-4">
-                <p className="text-xs uppercase tracking-wider text-slate-500">Location</p>
-                <p className="mt-1 font-medium text-slate-900">
-                  {freelancerProfileQuery.data.city}, {freelancerProfileQuery.data.country}
-                </p>
-              </div>
+              {[
+                { label: "Title", value: freelancerProfileQuery.data.professionalTitle, sub: freelancerProfileQuery.data.experienceLevel },
+                { label: "Skills", value: freelancerProfileQuery.data.skills },
+                { label: "Rate", value: `$${freelancerProfileQuery.data.hourlyRateUsd}/hr` },
+                { label: "Location", value: `${freelancerProfileQuery.data.city}, ${freelancerProfileQuery.data.country}` },
+              ].map((item) => (
+                <div key={item.label} className="rounded-xl border border-surface-200/60 bg-surface-50/50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-surface-400">{item.label}</p>
+                  <p className="mt-1 font-medium text-surface-900">{item.value}</p>
+                  {item.sub ? <p className="mt-1 text-sm text-surface-500">{item.sub}</p> : null}
+                </div>
+              ))}
             </div>
           ) : (
-            <p className="mt-3 text-sm text-slate-600">Complete your freelancer profile to receive better job matches and client trust.</p>
+            <p className="mt-3 text-sm text-surface-500">Complete your freelancer profile to receive better job matches and client trust.</p>
           )}
 
           <FreelancerAnalytics />
-        </section>
+        </motion.section>
       ) : null}
 
+      {/* ADMIN Section */}
       {user?.role === "ADMIN" ? (
         <section className="mt-6 space-y-6">
           <div className="grid gap-5 md:grid-cols-3">
-            <article className="card-surface p-6">
-              <p className="text-sm text-slate-600">Total users</p>
-              <p className="mt-2 text-3xl font-bold text-slate-900">{adminOverviewQuery.data?.counts.users ?? 0}</p>
-            </article>
-            <article className="card-surface p-6">
-              <p className="text-sm text-slate-600">Total jobs</p>
-              <p className="mt-2 text-3xl font-bold text-slate-900">{adminOverviewQuery.data?.counts.jobs ?? 0}</p>
-            </article>
-            <article className="card-surface p-6">
-              <p className="text-sm text-slate-600">Total proposals</p>
-              <p className="mt-2 text-3xl font-bold text-slate-900">{adminOverviewQuery.data?.counts.proposals ?? 0}</p>
-            </article>
+            {[
+              { label: "Total users", value: adminOverviewQuery.data?.counts.users ?? 0 },
+              { label: "Total jobs", value: adminOverviewQuery.data?.counts.jobs ?? 0 },
+              { label: "Total proposals", value: adminOverviewQuery.data?.counts.proposals ?? 0 },
+            ].map((item) => (
+              <motion.article key={item.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="card-surface p-6">
+                <p className="text-sm text-surface-500">{item.label}</p>
+                <p className="mt-2 font-heading text-3xl font-bold text-surface-900">{item.value}</p>
+              </motion.article>
+            ))}
           </div>
 
-          <article className="card-surface p-6">
-            <h2 className="text-xl font-semibold text-slate-900">Recent users</h2>
-            <div className="mt-4 overflow-x-auto">
+          <article className="overflow-hidden rounded-2xl border border-surface-200/80 bg-white shadow-card-sm">
+            <div className="border-b border-surface-100 px-6 py-4">
+              <h2 className="font-heading text-xl font-semibold text-surface-900">Recent users</h2>
+            </div>
+            <div className="overflow-x-auto">
               <table className="w-full min-w-[620px] text-left text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 text-slate-500">
-                    <th className="py-2 font-medium">Name</th>
-                    <th className="py-2 font-medium">Email</th>
-                    <th className="py-2 font-medium">Role</th>
-                    <th className="py-2 font-medium">Tokens</th>
+                  <tr className="border-b border-surface-200 text-surface-500">
+                    <th className="px-6 py-3 font-medium">Name</th>
+                    <th className="px-6 py-3 font-medium">Email</th>
+                    <th className="px-6 py-3 font-medium">Role</th>
+                    <th className="px-6 py-3 font-medium">Tokens</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(adminOverviewQuery.data?.users || []).map((item) => (
-                    <tr key={item.id} className="border-b border-slate-100">
-                      <td className="py-2 text-slate-800">{item.username || item.name}</td>
-                      <td className="py-2 text-slate-600">{item.email}</td>
-                      <td className="py-2 text-slate-600">{item.role}</td>
-                      <td className="py-2 text-slate-600">{item.tokens}</td>
+                    <tr key={item.id} className="border-b border-surface-100 transition-colors hover:bg-surface-50/50">
+                      <td className="px-6 py-3 text-surface-800">{item.username || item.name}</td>
+                      <td className="px-6 py-3 text-surface-500">{item.email}</td>
+                      <td className="px-6 py-3">
+                        <span className="rounded-lg bg-primary-50 px-2 py-0.5 text-xs font-semibold text-primary-700">{item.role}</span>
+                      </td>
+                      <td className="px-6 py-3 text-surface-600">{item.tokens}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -731,32 +719,32 @@ export default function DashboardPage() {
           </article>
 
           <article className="card-surface p-6">
-            <h2 className="text-xl font-semibold text-slate-900">Recent jobs</h2>
+            <h2 className="font-heading text-xl font-semibold text-surface-900">Recent jobs</h2>
             <div className="mt-4 space-y-3">
               {(adminOverviewQuery.data?.jobs || []).map((job) => (
-                <div key={job.id} className="rounded-xl border border-slate-200 p-4">
+                <div key={job.id} className="rounded-xl border border-surface-200/60 bg-surface-50/50 p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-medium text-slate-900">{job.title}</p>
-                    <p className="text-xs text-slate-500">{new Date(job.createdAt).toLocaleString()}</p>
+                    <p className="font-medium text-surface-900">{job.title}</p>
+                    <p className="text-xs text-surface-500">{new Date(job.createdAt).toLocaleString()}</p>
                   </div>
-                  <p className="mt-1 text-sm text-slate-600">Client: {job.client.username || job.client.name}</p>
-                  <p className="mt-1 text-xs text-slate-500">Budget: {job.budget} | Proposals: {job._count.proposals}</p>
+                  <p className="mt-1 text-sm text-surface-500">Client: {job.client.username || job.client.name}</p>
+                  <p className="mt-1 text-xs text-surface-400">Budget: {job.budget} | Proposals: {job._count.proposals}</p>
                 </div>
               ))}
             </div>
           </article>
 
           <article className="card-surface p-6">
-            <h2 className="text-xl font-semibold text-slate-900">Recent proposals</h2>
+            <h2 className="font-heading text-xl font-semibold text-surface-900">Recent proposals</h2>
             <div className="mt-4 space-y-3">
               {(adminOverviewQuery.data?.proposals || []).map((proposal) => (
-                <div key={proposal.id} className="rounded-xl border border-slate-200 p-4">
+                <div key={proposal.id} className="rounded-xl border border-surface-200/60 bg-surface-50/50 p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-medium text-slate-900">{proposal.job.title}</p>
-                    <p className="text-xs text-slate-500">{new Date(proposal.createdAt).toLocaleString()}</p>
+                    <p className="font-medium text-surface-900">{proposal.job.title}</p>
+                    <p className="text-xs text-surface-500">{new Date(proposal.createdAt).toLocaleString()}</p>
                   </div>
-                  <p className="mt-1 text-sm text-slate-600">Freelancer: {proposal.freelancer.username || proposal.freelancer.name}</p>
-                  <p className="mt-2 text-sm text-slate-700">{proposal.coverLetter}</p>
+                  <p className="mt-1 text-sm text-surface-500">Freelancer: {proposal.freelancer.username || proposal.freelancer.name}</p>
+                  <p className="mt-2 text-sm text-surface-600">{proposal.coverLetter}</p>
                 </div>
               ))}
             </div>

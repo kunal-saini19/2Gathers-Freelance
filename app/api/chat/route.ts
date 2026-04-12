@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { mockFaqs, mockJobs } from "@/lib/db";
 
-
-const client = new OpenAI({
-  apiKey: process.env.GROQ_API_KEY,
-  baseURL: "https://api.groq.com/openai/v1",
-});
+function createGroqClient() {
+  return new OpenAI({
+    apiKey: process.env.GROQ_API_KEY,
+    baseURL: "https://api.groq.com/openai/v1",
+  });
+}
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -114,6 +115,8 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    const client = createGroqClient();
 
     const chatMessages = normalizeMessages(messages);
 

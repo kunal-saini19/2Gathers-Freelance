@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
+import { FileText, DollarSign, Code2, CalendarDays, Check } from "lucide-react";
 
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useAuth } from "@/context/AuthContext";
@@ -83,11 +84,14 @@ export default function ClientPostJobPage() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         onSubmit={onSubmit}
-        className="card-surface space-y-4 p-6"
+        className="card-surface space-y-5 p-6"
       >
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-5 md:grid-cols-2">
           <label>
-            <span className="label">Title *</span>
+            <span className="label flex items-center gap-1.5">
+              <FileText className="h-3.5 w-3.5 text-surface-400" />
+              Title *
+            </span>
             <input
               className="input"
               value={form.title}
@@ -97,7 +101,10 @@ export default function ClientPostJobPage() {
           </label>
 
           <label>
-            <span className="label">Budget (₹) *</span>
+            <span className="label flex items-center gap-1.5">
+              <DollarSign className="h-3.5 w-3.5 text-surface-400" />
+              Budget (₹) *
+            </span>
             <input
               className="input"
               inputMode="numeric"
@@ -110,15 +117,21 @@ export default function ClientPostJobPage() {
           <label className="md:col-span-2">
             <span className="label">Description *</span>
             <textarea
-              className="input min-h-32"
+              className="input min-h-32 resize-y"
               value={form.description}
               onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
               placeholder="Describe scope, deliverables, milestones, and success criteria..."
             />
+            <p className="mt-1 text-xs text-surface-400">
+              {form.description.length} characters
+            </p>
           </label>
 
           <label>
-            <span className="label">Skills Required *</span>
+            <span className="label flex items-center gap-1.5">
+              <Code2 className="h-3.5 w-3.5 text-surface-400" />
+              Skills Required *
+            </span>
             <input
               className="input"
               value={form.skills}
@@ -128,7 +141,10 @@ export default function ClientPostJobPage() {
           </label>
 
           <label>
-            <span className="label">Deadline *</span>
+            <span className="label flex items-center gap-1.5">
+              <CalendarDays className="h-3.5 w-3.5 text-surface-400" />
+              Deadline *
+            </span>
             <input
               className="input"
               type="date"
@@ -138,16 +154,34 @@ export default function ClientPostJobPage() {
           </label>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 border-t border-surface-100 pt-5">
           <button type="submit" className="btn-primary btn-md" disabled={createJobMutation.isPending}>
-            {createJobMutation.isPending ? "Posting..." : "Submit Job"}
+            {createJobMutation.isPending ? (
+              <span className="flex items-center gap-2">
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                Posting...
+              </span>
+            ) : (
+              <>
+                <Check className="h-4 w-4" />
+                Submit Job
+              </>
+            )}
           </button>
           <button type="button" onClick={() => setForm(initialState)} className="btn-secondary btn-md" disabled={createJobMutation.isPending}>
             Reset
           </button>
         </div>
 
-        {status ? <p className="rounded-lg bg-slate-100 px-4 py-2 text-sm text-slate-700">{status}</p> : null}
+        {status ? (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="rounded-xl border border-primary-100 bg-primary-50 px-4 py-2.5 text-sm text-primary-700"
+          >
+            {status}
+          </motion.p>
+        ) : null}
       </motion.form>
     </DashboardLayout>
   );
