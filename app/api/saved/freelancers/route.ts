@@ -4,7 +4,6 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedUserId } from "@/lib/server-auth";
 
-export const runtime = "nodejs";
 
 const toggleSchema = z.object({
   freelancerId: z.coerce.number().int().positive(),

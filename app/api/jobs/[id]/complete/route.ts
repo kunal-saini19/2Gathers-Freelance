@@ -4,8 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { getAuthenticatedUserId } from "@/lib/server-auth";
 import { createNotification } from "@/lib/notifications";
 
-export const runtime = "nodejs";
-
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   const userId = getAuthenticatedUserId(request);
   if (!userId) {

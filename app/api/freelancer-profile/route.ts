@@ -4,7 +4,6 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedUserId } from "@/lib/server-auth";
 
-export const runtime = "nodejs";
 
 const freelancerProfileSchema = z.object({
   professionalTitle: z.string().trim().min(5),

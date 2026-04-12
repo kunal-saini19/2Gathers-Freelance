@@ -3,7 +3,6 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { comparePassword, issueAccessToken } from "@/lib/auth";
 
-export const runtime = "nodejs";
 
 const loginSchema = z.object({
   username: z.string().trim().min(3),

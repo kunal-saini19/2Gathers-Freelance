@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { parseAccessToken } from "@/lib/auth";
 
-export const runtime = "nodejs";
 
 function getBearerToken(request: Request) {
   const auth = request.headers.get("authorization") || "";

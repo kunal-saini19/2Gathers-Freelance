@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { hashPassword, issueAccessToken, makeVerificationToken, verificationExpiryDate } from "@/lib/auth";
 import { sendMail } from "@/lib/mailer";
 
-export const runtime = "nodejs";
 
 const registerSchema = z.object({
   username: z.string().trim().min(3),

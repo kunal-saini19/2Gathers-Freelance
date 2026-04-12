@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 
-export const runtime = "nodejs";
 
 const tokenSchema = z.object({ token: z.string().min(10) });
 

@@ -5,7 +5,6 @@ import { prisma } from "@/lib/prisma";
 import { getAuthenticatedUserId } from "@/lib/server-auth";
 import { createNotification } from "@/lib/notifications";
 
-export const runtime = "nodejs";
 
 const createMessageSchema = z.object({
   proposalId: z.coerce.number().int().positive(),

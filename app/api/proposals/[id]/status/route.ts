@@ -5,8 +5,6 @@ import { prisma } from "@/lib/prisma";
 import { getAuthenticatedUserId } from "@/lib/server-auth";
 import { createNotification } from "@/lib/notifications";
 
-export const runtime = "nodejs";
-
 const updateProposalStatusSchema = z.object({
   status: z.enum(["SHORTLISTED", "ACCEPTED", "REJECTED"]),
 });

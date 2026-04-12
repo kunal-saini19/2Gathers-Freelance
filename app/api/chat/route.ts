@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { mockFaqs, mockJobs } from "@/lib/db";
 
-export const runtime = "nodejs";
 
 const client = new OpenAI({
   apiKey: process.env.GROQ_API_KEY,
