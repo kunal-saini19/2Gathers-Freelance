@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "app/api/**": {
-      "runtime": "nodejs20.x"
-    }
-  },
   "buildCommand": "npm run build && npm run postinstall",
   "outputDirectory": ".next",
   "headers": [
