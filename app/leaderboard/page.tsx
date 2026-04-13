@@ -158,7 +158,7 @@ export default function LeaderboardPage() {
                     </p>
                     <button
                       type="button"
-                      onClick={() => router.push("/freelancer/dashboard")}
+                      onClick={() => router.push("/freelancers")}
                       className="inline-flex items-center gap-1.5 rounded-lg bg-surface-900 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:bg-surface-800 active:scale-[0.98]"
                     >
                       <Eye className="h-3.5 w-3.5" />

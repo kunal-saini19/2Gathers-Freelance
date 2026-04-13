@@ -9,6 +9,7 @@ import { FileText, DollarSign, Code2, CalendarDays, Check } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useAuth } from "@/context/AuthContext";
 import { jobsApi } from "@/lib/api";
+import { calculateApplicationTokenCost, TOKEN_PRICE_INR } from "@/lib/tokenomics";
 
 type JobFormState = {
   title: string;
@@ -37,14 +38,20 @@ export default function ClientPostJobPage() {
       const budgetValue = Number(form.budget);
       const fullDescription = `${form.description.trim()}\n\nSkills Required: ${form.skills.trim()}\nDeadline: ${form.deadline}`;
 
-      await jobsApi.create({
+      const response = await jobsApi.create({
         title: form.title.trim(),
         description: fullDescription,
         budget: budgetValue,
       });
+      return response.data;
     },
-    onSuccess: () => {
-      setStatus("Job posted successfully.");
+    onSuccess: (data: any) => {
+      const quote = data?.tokenQuote;
+      if (quote?.tokenCost) {
+        setStatus(`Job posted. Apply fee set to ${quote.tokenCost} TOK (~Rs ${quote.priceInr}).`);
+      } else {
+        setStatus("Job posted successfully.");
+      }
       setForm(initialState);
       router.push("/dashboard");
       router.refresh();
@@ -77,6 +84,17 @@ export default function ClientPostJobPage() {
 
     createJobMutation.mutate();
   }
+
+  const budgetForQuote = Number(form.budget || "0");
+  const fullDescriptionForQuote = `${form.description.trim()}\n\nSkills Required: ${form.skills.trim()}\nDeadline: ${form.deadline}`;
+  const liveQuote = Number.isInteger(budgetForQuote) && budgetForQuote > 0
+    ? calculateApplicationTokenCost({
+        budgetInr: budgetForQuote,
+        title: form.title.trim() || "Untitled",
+        description: fullDescriptionForQuote,
+        proposalCount: 0,
+      })
+    : null;
 
   return (
     <DashboardLayout title="Post a Job" subtitle="Publish a project brief with strong scope clarity to attract high-quality proposals faster.">
@@ -153,6 +171,13 @@ export default function ClientPostJobPage() {
             />
           </label>
         </div>
+
+        {liveQuote ? (
+          <div className="rounded-xl border border-primary-100 bg-primary-50 px-4 py-3 text-sm text-primary-800">
+            <p className="font-semibold">Apply Fee Estimate</p>
+            <p className="mt-1">{liveQuote.tokenCost} TOK (~Rs {liveQuote.priceInr}) at Rs {TOKEN_PRICE_INR} per token.</p>
+          </div>
+        ) : null}
 
         <div className="flex flex-wrap items-center gap-3 border-t border-surface-100 pt-5">
           <button type="submit" className="btn-primary btn-md" disabled={createJobMutation.isPending}>

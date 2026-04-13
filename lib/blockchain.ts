@@ -133,95 +133,45 @@ export async function getWalletState(userId: string): Promise<BlockchainWalletSt
     };
   }
 
-  const walletAddress = user.walletAddress;
-  if (!walletAddress) {
+  const tokenTxs = await prisma.tokenTransaction.findMany({
+    where: { userId: numericUserId, status: "CONFIRMED" },
+    orderBy: { createdAt: "desc" },
+    take: 60,
+  });
+
+  const transactions: BlockchainLedgerTransaction[] = tokenTxs.map((tx) => {
+    const isDebit = tx.type === "JOB_APPLY_DEBIT";
+    const amount = isDebit ? -Math.abs(tx.tokenAmount) : Math.abs(tx.tokenAmount);
     return {
-      userId,
-      walletAddress: null,
-      balance: user.tokens,
-      contractAddress: getContractAddress() || null,
-      transactions: [],
+      id: String(tx.id),
+      hash: tx.txHash,
+      type: isDebit ? "send" : "mint",
+      label: isDebit ? "Applied to job" : "Bought tokens",
+      amount,
+      balanceAfter: 0,
+      createdAt: tx.createdAt.toISOString(),
+      to: isDebit ? tx.network : undefined,
+      from: !isDebit ? tx.network : undefined,
     };
-  }
+  });
 
-  try {
-    const provider = getProvider();
-    const contract = getTokenContract(provider);
-    const [balanceRaw, incomingEvents, outgoingEvents] = await Promise.all([
-      contract.balanceOf(walletAddress) as Promise<bigint>,
-      contract.queryFilter(contract.filters.Transfer(null, walletAddress)),
-      contract.queryFilter(contract.filters.Transfer(walletAddress, null)),
-    ]);
-
-    const eventEntries = await Promise.all(
-      [...incomingEvents, ...outgoingEvents].map(async (event) => {
-        const parsed = contract.interface.parseLog({ topics: event.topics, data: event.data });
-        const from = String(parsed?.args?.from || "");
-        const to = String(parsed?.args?.to || "");
-        const value = BigInt(parsed?.args?.value?.toString?.() ?? "0");
-        const logIndex = Number((event as { index?: number; logIndex?: number }).logIndex ?? (event as { index?: number }).index ?? 0);
-        const direction: BlockchainLedgerTransaction["type"] = from === ethers.ZeroAddress ? "mint" : to === walletAddress ? "receive" : "send";
-        const amount = toTokenAmount(value);
-        const signedAmount = direction === "send" ? -amount : amount;
-        const block = event.blockNumber ? await provider.getBlock(event.blockNumber) : null;
-        return {
-          id: `${event.transactionHash}-${logIndex}`,
-          hash: event.transactionHash || crypto.randomUUID(),
-          type: direction,
-          label:
-            direction === "mint"
-              ? "Minted via onramp"
-              : direction === "receive"
-                ? `Received from ${shortAddress(from)}`
-                : `Sent to ${shortAddress(to)}`,
-          amount: signedAmount,
-          balanceAfter: 0,
-          createdAt: block?.timestamp ? new Date(block.timestamp * 1000).toISOString() : new Date().toISOString(),
-          from,
-          to,
-          blockNumber: Number(event.blockNumber || 0),
-          logIndex,
-        };
-      }),
-    );
-
-    const transactions = eventEntries.sort((left, right) => left.blockNumber - right.blockNumber || left.logIndex - right.logIndex);
-
-    const balance = toTokenAmount(balanceRaw);
-    const netMovement = transactions.reduce((sum, tx) => sum + tx.amount, 0);
-    let runningBalance = Math.max(0, balance - netMovement);
-
-    const ledger = transactions.map((tx) => {
-      runningBalance += tx.amount;
-      return {
-        id: tx.id,
-        hash: tx.hash,
-        type: tx.type,
-        label: tx.label,
-        amount: tx.amount,
-        balanceAfter: Number(runningBalance.toFixed(6)),
-        createdAt: tx.createdAt,
-        from: tx.from,
-        to: tx.to,
-      };
-    });
-
-    return {
-      userId,
-      walletAddress,
-      balance: Number(balance.toFixed(6)),
-      contractAddress: getContractAddress(),
-      transactions: ledger,
+  let running = user.tokens;
+  const withBalances = transactions.map((tx) => {
+    const row = {
+      ...tx,
+      balanceAfter: Number(running.toFixed(6)),
     };
-  } catch {
-    return {
-      userId,
-      walletAddress,
-      balance: user.tokens,
-      contractAddress: getContractAddress() || null,
-      transactions: [],
-    };
-  }
+    running -= tx.amount;
+    return row;
+  });
+
+  return {
+    userId,
+    walletAddress: user.walletAddress,
+    balance: user.tokens,
+    contractAddress: getContractAddress() || null,
+    transactions: withBalances,
+  };
 }
 
 export async function mintTokensToWallet(params: { walletAddress: string; tokenAmount: number }) {

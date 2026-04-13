@@ -99,10 +99,10 @@ export const authApi = {
   verifyEmail: (token: string) => localApi.post("/api/auth/verify-email", { token }),
   dashboard: async () => {
     const response = await localApi.get("/api/auth/me");
-    const role = String(response.data?.user?.role || "");
+    const walletBalance = Number(response.data?.user?.tokens || 0);
     return {
       data: {
-        walletBalance: role === "CLIENT" ? 100 : role === "FREELANCER" ? 50 : 0,
+        walletBalance,
       },
     };
   },
@@ -154,12 +154,17 @@ export const savedFreelancersApi = {
   toggle: (freelancerId: number) => localApi.post("/api/saved/freelancers", { freelancerId }),
 };
 
+export const freelancersApi = {
+  list: () => localApi.get("/api/freelancers"),
+};
+
 export const adminApi = {
   overview: () => localApi.get("/api/admin/overview"),
 };
 
 export const freelancerProfileApi = {
   me: () => localApi.get("/api/freelancer-profile"),
+  byId: (freelancerId: number) => localApi.get(`/api/freelancer-profile/${freelancerId}`),
   save: (payload: {
     professionalTitle: string;
     bio: string;

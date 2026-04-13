@@ -25,6 +25,7 @@ export async function GET(request: Request) {
       username: true,
       email: true,
       role: true,
+      tokens: true,
       walletAddress: true,
       freelancerProfile: {
         select: {
@@ -49,6 +50,7 @@ export async function GET(request: Request) {
       username: user.username,
       email: user.email,
       role: user.role,
+      tokens: user.tokens,
       walletAddress: user.walletAddress,
       hasFreelancerProfile: !!user.freelancerProfile,
       hasClientProfile: !!user.clientProfile,

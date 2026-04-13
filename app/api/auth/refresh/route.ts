@@ -25,6 +25,7 @@ export async function POST(request: Request) {
       username: true,
       email: true,
       role: true,
+      tokens: true,
       emailVerified: true,
       freelancerProfile: {
         select: {
@@ -50,6 +51,7 @@ export async function POST(request: Request) {
       username: user.username,
       email: user.email,
       role: user.role,
+      tokens: user.tokens,
       hasFreelancerProfile: !!user.freelancerProfile,
       hasClientProfile: !!user.clientProfile,
     },

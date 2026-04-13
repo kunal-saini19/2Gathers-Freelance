@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Coins, Briefcase, Search, MessageSquare, Wallet, Code2, Plus, Bell, CheckCheck,
-  BookmarkCheck, UserMinus, ChevronDown, ChevronUp
+  BookmarkCheck, UserMinus, ChevronDown, ChevronUp, Eye
 } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import {
@@ -340,6 +340,7 @@ export default function DashboardPage() {
 
   const quickActions = [
     { label: "Browse jobs", icon: Search, href: "/jobs", show: true },
+    { label: "Browse freelancers", icon: Eye, href: "/freelancers", show: true },
     { label: "Get Jobs", icon: Briefcase, href: "/freelancer/jobs", show: user?.role === "FREELANCER" },
     { label: "Solve Tasks", icon: Code2, href: "/tasks", show: user?.role === "FREELANCER" },
     { label: "Post a Job", icon: Plus, href: "/client/post-job", show: user?.role === "CLIENT" },
@@ -358,6 +359,7 @@ export default function DashboardPage() {
               { label: "Overview", href: "/dashboard", icon: Search },
               ...(user?.role === "FREELANCER" ? [{ label: "Get Jobs", href: "/freelancer/jobs", icon: Briefcase }] : []),
               ...(user?.role === "CLIENT" ? [{ label: "Post a Job", href: "/client/post-job", icon: Plus }] : []),
+              { label: "Freelancers", href: "/freelancers", icon: Eye },
               { label: "Job Board", href: "/jobs", icon: Search },
               { label: "Messages & Support", href: "/support", icon: MessageSquare },
               { label: "Wallet", href: "/wallet", icon: Wallet },
@@ -579,6 +581,13 @@ export default function DashboardPage() {
                             </div>
                             <p className="mt-3 text-sm text-surface-600">{proposal.coverLetter}</p>
                             <div className="mt-3 flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                className="btn-secondary btn-sm"
+                                onClick={() => router.push(`/freelancers/${proposal.freelancer.id}`)}
+                              >
+                                <Eye className="h-3.5 w-3.5" /> Profile
+                              </button>
                               <button type="button" className="btn-secondary btn-sm" disabled={updateProposalStatusMutation.isPending}
                                 onClick={() => updateProposalStatusMutation.mutate({ proposalId: proposal.id, status: "SHORTLISTED" })}>
                                 Shortlist
@@ -622,6 +631,13 @@ export default function DashboardPage() {
                       <button type="button" className="btn-ghost btn-sm text-danger-600 hover:bg-danger-50" disabled={toggleSavedFreelancerMutation.isPending}
                         onClick={() => toggleSavedFreelancerMutation.mutate(item.freelancer.id)}>
                         <UserMinus className="h-3.5 w-3.5" /> Remove
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-secondary btn-sm"
+                        onClick={() => router.push(`/freelancers/${item.freelancer.id}`)}
+                      >
+                        <Eye className="h-3.5 w-3.5" /> Profile
                       </button>
                     </article>
                   );

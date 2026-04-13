@@ -34,6 +34,7 @@ model User {
   hiredJobs                  Job[] @relation("HiredJobs")
   taskProgress               UserTaskProgress[]
   taskSubmissions            TaskSubmission[]
+  tokenTransactions          TokenTransaction[]
 }
 
 model OnrampPayment {
@@ -54,6 +55,7 @@ model Job {
   title       String
   description String
   budget      Int
+  applicationTokenCost Int @default(5)
   status      String    @default("OPEN")
   clientId    Int
   hiredFreelancerId Int?
@@ -62,6 +64,7 @@ model Job {
   proposals   Proposal[]
   reviews     Review[]
   savedBy     SavedJob[]
+  tokenTransactions TokenTransaction[]
   completedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -76,6 +79,7 @@ model Proposal {
   job          Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
   freelancer   User     @relation("FreelancerProposals", fields: [freelancerId], references: [id])
   messages     Message[]
+  tokenTransactions TokenTransaction[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -248,4 +252,23 @@ model TaskSubmission {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   createdAt    DateTime @default(now())
+}
+
+model TokenTransaction {
+  id             Int      @id @default(autoincrement())
+  txHash         String   @unique
+  userId         Int
+  jobId          Int?
+  proposalId     Int?
+  type           String
+  tokenAmount    Int
+  tokenPriceInr  Int
+  totalInr       Int
+  status         String   @default("CONFIRMED")
+  network        String   @default("2Gathers Testnet")
+  createdAt      DateTime @default(now())
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job            Job?     @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  proposal       Proposal? @relation(fields: [proposalId], references: [id], onDelete: SetNull)
 }
