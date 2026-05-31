@@ -11,6 +11,7 @@ export interface AuthUser {
   username: string;
   email?: string;
   role: UserRole;
+  tokens?: number;
   walletAddress?: string | null;
   hasFreelancerProfile?: boolean;
   hasClientProfile?: boolean;

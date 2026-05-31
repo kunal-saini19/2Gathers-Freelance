@@ -119,6 +119,30 @@ async function processCallback(paymentLinkId: string, paymentStatus: string, pay
     },
   });
 
+  const user = await prisma.user.findFirst({
+    where: { walletAddress: payment.walletAddress },
+    select: { id: true },
+  });
+
+  if (user) {
+    await prisma.tokenTransaction.upsert({
+      where: { txHash: mintReceipt.hash },
+      update: {
+        status: "CONFIRMED",
+      },
+      create: {
+        txHash: mintReceipt.hash,
+        userId: user.id,
+        type: "ONRAMP_CREDIT",
+        tokenAmount: payment.tokens,
+        tokenPriceInr: Math.max(1, Math.round(payment.amount / Math.max(1, payment.tokens))),
+        totalInr: payment.amount,
+        status: "CONFIRMED",
+        network: "2Gathers Testnet",
+      },
+    });
+  }
+
   return NextResponse.json({
     status: "completed",
     orderId: paymentLinkId,

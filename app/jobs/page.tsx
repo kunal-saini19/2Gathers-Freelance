@@ -8,12 +8,14 @@ import { Bookmark, BookmarkCheck, Search, DollarSign, Users, ChevronRight } from
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { jobsApi, savedJobsApi } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { TOKEN_PRICE_INR } from "@/lib/tokenomics";
 
 type JobItem = {
   id: number;
   title: string;
   description: string;
   budget: number;
+  applicationTokenCost?: number;
   clientId: number;
   createdAt: string;
   client: {
@@ -184,6 +186,9 @@ export default function JobsPage() {
               <span className="inline-flex items-center gap-1.5 rounded-lg bg-primary-50 px-3 py-1 font-semibold text-primary-700 ring-1 ring-primary-100">
                 <DollarSign className="h-3 w-3" />
                 {job.budget}
+              </span>
+              <span className="rounded-lg bg-emerald-50 px-3 py-1 font-semibold text-emerald-700 ring-1 ring-emerald-100">
+                Apply Fee: {job.applicationTokenCost ?? 0} TOK (~Rs {(job.applicationTokenCost ?? 0) * TOKEN_PRICE_INR})
               </span>
               <span className="rounded-lg bg-surface-50 px-3 py-1 font-semibold text-surface-600 ring-1 ring-surface-200/80">
                 {job.client?.username || job.client?.name || "Unknown"}

@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedUserId } from "@/lib/server-auth";
+import { calculateApplicationTokenCost } from "@/lib/tokenomics";
 
 
 const createJobSchema = z.object({
@@ -61,12 +62,19 @@ export async function POST(request: Request) {
   }
 
   const payload = parsed.data;
+  const tokenQuote = calculateApplicationTokenCost({
+    budgetInr: payload.budget,
+    title: payload.title,
+    description: payload.description,
+    proposalCount: 0,
+  });
 
   const job = await prisma.job.create({
     data: {
       title: payload.title,
       description: payload.description,
       budget: payload.budget,
+      applicationTokenCost: tokenQuote.tokenCost,
       clientId: user.id,
     },
     include: {
@@ -81,5 +89,14 @@ export async function POST(request: Request) {
     },
   });
 
-  return NextResponse.json({ job }, { status: 201 });
+  return NextResponse.json(
+    {
+      job,
+      tokenQuote: {
+        tokenCost: tokenQuote.tokenCost,
+        priceInr: tokenQuote.priceInr,
+      },
+    },
+    { status: 201 },
+  );
 }

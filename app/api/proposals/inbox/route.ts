@@ -35,13 +35,17 @@ export async function GET(request: Request) {
         select: {
           id: true,
           title: true,
+          budget: true,
           status: true,
+          completedAt: true,
+          createdAt: true,
           clientId: true,
           client: {
             select: {
               id: true,
               username: true,
               name: true,
+              email: true,
             },
           },
         },
@@ -51,6 +55,8 @@ export async function GET(request: Request) {
           id: true,
           username: true,
           name: true,
+          email: true,
+          walletAddress: true,
         },
       },
     },

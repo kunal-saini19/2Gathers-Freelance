@@ -7,12 +7,14 @@ import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { jobsApi, proposalsApi, reviewsApi } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { TOKEN_PRICE_INR } from "@/lib/tokenomics";
 
 type JobDetails = {
   id: number;
   title: string;
   description: string;
   budget: number;
+  applicationTokenCost?: number;
   status: "OPEN" | "ACCEPTED" | "IN_PROGRESS" | "COMPLETED";
   clientId: number;
   hiredFreelancerId?: number | null;
@@ -47,13 +49,21 @@ export default function JobDetailsPage() {
 
   const applyMutation = useMutation({
     mutationFn: async () => {
-      await proposalsApi.create({
+      const response = await proposalsApi.create({
         jobId,
         coverLetter,
       });
+      return response.data;
     },
-    onSuccess: () => {
-      setStatus("Application submitted successfully");
+    onSuccess: (data: any) => {
+      const debit = data?.tokenDebit;
+      if (debit?.txHash) {
+        setStatus(
+          `Applied successfully. Debited ${debit.tokenCost} TOK (Rs ${debit.totalInr}). Tx ${debit.txHash.slice(0, 14)}... | Remaining ${debit.remainingTokens} TOK`,
+        );
+      } else {
+        setStatus("Application submitted successfully");
+      }
       setCoverLetter("");
       void jobQuery.refetch();
     },
@@ -130,6 +140,9 @@ export default function JobDetailsPage() {
 
           <div className="flex flex-wrap gap-2 text-xs">
             <span className="rounded-full bg-cyan-100 px-3 py-1 font-semibold text-cyan-700">Budget: {job.budget}</span>
+            <span className="rounded-full bg-emerald-100 px-3 py-1 font-semibold text-emerald-700">
+              Apply Fee: {job.applicationTokenCost ?? 0} TOK (~Rs {(job.applicationTokenCost ?? 0) * TOKEN_PRICE_INR})
+            </span>
             <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">Proposals: {job._count?.proposals || 0}</span>
             <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">Status: {job.status}</span>
           </div>
@@ -157,7 +170,7 @@ export default function JobDetailsPage() {
                 onChange={(event) => setCoverLetter(event.target.value)}
               />
               <button type="button" onClick={applyToJob} className="btn-primary btn-md" disabled={applyMutation.isPending}>
-                {applyMutation.isPending ? "Submitting..." : "Apply"}
+                {applyMutation.isPending ? "Submitting..." : `Apply (${job.applicationTokenCost ?? 0} TOK)`}
               </button>
             </div>
           ) : (
